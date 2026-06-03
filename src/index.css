@@ -1,0 +1,170 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #0a0c0f;
+  font-family: 'Share Tech Mono', monospace;
+  color: #e5e7eb;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── core UI animations ─────────────────────────────────────────────────────── */
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.12; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 5px currentColor; }
+  50%       { box-shadow: 0 0 12px currentColor; }
+}
+
+/* ── ghost sensor animations ────────────────────────────────────────────────── */
+
+/* sparse heartbeat spike for WATCHING state — each sensor gets a different delay */
+@keyframes ghost-pulse {
+  0%, 35%, 100% { opacity: 0.22; }
+  18%            { opacity: 0.90; }
+}
+
+/* one-shot flash when intrusion row first appears */
+@keyframes intrusion-flash {
+  0%   { background: rgba(239, 68, 68, 0.22); }
+  100% { background: rgba(239, 68, 68, 0.04); }
+}
+
+/* ── provenance panel animations ────────────────────────────────────────────── */
+
+/* whole panel slides up from bottom of viewport */
+@keyframes slide-up-panel {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* dim scrim fades in behind the panel */
+@keyframes fade-scrim {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* each timeline step fades + slides in from the left */
+@keyframes step-reveal {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* connector dashed line draws top-to-bottom */
+@keyframes draw-connector {
+  from { transform: scaleY(0); opacity: 0; }
+  to   { transform: scaleY(1); opacity: 1; }
+}
+
+/* gentle ripple pulse for the final resolved node */
+@keyframes node-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0   rgba(34, 197, 94, 0.55),
+                0 0 12px   rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0),
+                0 0 12px   rgba(34, 197, 94, 0.4);
+  }
+}
+
+/* ── CRT scanline overlay ──────────────────────────────────────────────────── */
+
+@keyframes scanline {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(8px); }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.14),
+    rgba(0, 0, 0, 0.14) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  animation: scanline 0.15s linear infinite;
+}
+
+/* ── typewriter effect ────────────────────────────────────────────────────── */
+
+@keyframes typewriter {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+.typewriter-text {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid currentColor;
+  animation: typewriter steps(var(--char-count, 1), end) 0.08s steps(1, end) forwards;
+  animation-fill-mode: both;
+}
+
+/* ── red pulsing border (anomaly matrix) ────────────────────────────────── */
+
+@keyframes pulsing-border {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6),
+                inset 0 0 20px rgba(239, 68, 68, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0),
+                inset 0 0 20px rgba(239, 68, 68, 0.15);
+  }
+}
+
+.anomaly-alert {
+  border-color: #ef4444 !important;
+  animation: pulsing-border 0.9s ease-in-out infinite;
+}
+
+/* ── status bar pulse ──────────────────────────────────────────────────── */
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 0.8; }
+  50%      { opacity: 1; }
+}
+
+.status-pulse {
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+/* ── marquee scroll (attack warning) ──────────────────────────────────── */
+
+@keyframes marquee {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.marquee-text {
+  display: inline-block;
+  animation: marquee 8s linear infinite;
+}
+
+/* ── scrollbar ──────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar        { width: 4px; }
+::-webkit-scrollbar-track  { background: #080b10; }
+::-webkit-scrollbar-thumb  { background: #1a2030; border-radius: 2px; }
