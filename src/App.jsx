@@ -192,6 +192,128 @@ function Clock() {
   )
 }
 
+// ─── Persona Selector ─────────────────────────────────────────────────────────
+
+function PersonaSelector({ persona, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <span style={{ fontSize: '0.62rem', color: '#4b5563', letterSpacing: '0.1em' }}>MODE:</span>
+      {['agriculture', 'analyst'].map(p => (
+        <button
+          key={p}
+          onClick={() => onChange(p)}
+          style={{
+            padding: '4px 12px',
+            background: persona === p ? 'rgba(34,197,94,0.15)' : 'transparent',
+            border: `1px solid ${persona === p ? '#22c55e' : '#1a2030'}`,
+            color: persona === p ? '#22c55e' : '#4b5563',
+            fontFamily: "'Share Tech Mono', monospace",
+            fontSize: '0.62rem',
+            letterSpacing: '0.1em',
+            cursor: 'pointer',
+            textTransform: 'uppercase',
+            transition: 'all 0.25s ease',
+          }}
+        >
+          {p === 'agriculture' ? '🌾 Agriculture Officer' : '🔍 Security Analyst'}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ─── Persona-specific alert messages ──────────────────────────────────────────
+
+function getAlertMessage(persona, confidence, flagged) {
+  if (persona === 'agriculture') {
+    if (confidence < 30) {
+      return { title: 'System Healthy', msg: 'All sensors operating normally. No action needed.', icon: '✓' }
+    }
+    if (confidence < 70) {
+      return {
+        title: 'Verify Sensors',
+        msg: `Irrigation system detected an anomaly in ${flagged.join(', ')} data. Please verify sensor readings before acting on advisories.`,
+        icon: '⚠',
+      }
+    }
+    return {
+      title: 'Critical Alert',
+      msg: `EMERGENCY: ${flagged.join(', ')} sensor(s) appear compromised. Recommended: Stop automated irrigation, manually inspect sensors, contact support.`,
+      icon: '🚨',
+    }
+  }
+  // analyst view
+  if (confidence < 30) {
+    return { title: 'NOMINAL', msg: 'All correlations nominal. No anomalies detected.', icon: '✓' }
+  }
+  if (confidence < 70) {
+    return {
+      title: 'ANOMALY DETECTED',
+      msg: `Confidence: ${confidence.toFixed(1)}%. Flagged domains: ${flagged.join(', ')}. Review correlation matrix.`,
+      icon: '⚠',
+    }
+  }
+  return {
+    title: 'CRITICAL DIVERGENCE',
+    msg: `Confidence: ${confidence.toFixed(1)}%. Possible sensor compromise detected. Attack vector localized. Query provenance for forensics.`,
+    icon: '🔴',
+  }
+}
+
+// ─── Provenance Query Panel ───────────────────────────────────────────────────
+
+function ProvenanceQuery({ persona, onQuery }) {
+  const [days, setDays] = useState(30)
+  return persona === 'agriculture' ? null : (
+    <div style={{
+      background: '#0a0e14',
+      border: '1px solid #1a2030',
+      padding: '12px 14px',
+      marginTop: '8px',
+      borderRadius: '2px',
+    }}>
+      <div style={{ fontSize: '0.62rem', color: '#f59e0b', letterSpacing: '0.12em', marginBottom: '6px' }}>
+        ▶ FORENSIC QUERY
+      </div>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <label style={{ fontSize: '0.56rem', color: '#4b5563' }}>
+          Last <input
+            type="number"
+            min="1"
+            max="90"
+            value={days}
+            onChange={e => setDays(parseInt(e.target.value))}
+            style={{
+              width: '40px',
+              background: '#0f1117',
+              border: '1px solid #1a2030',
+              color: '#d1d5db',
+              fontFamily: "'Share Tech Mono', monospace",
+              fontSize: '0.56rem',
+              padding: '2px 4px',
+            }}
+          /> days
+        </label>
+        <button
+          onClick={() => onQuery(days)}
+          style={{
+            padding: '4px 8px',
+            background: 'rgba(96,165,250,0.1)',
+            border: '1px solid #60a5fa',
+            color: '#60a5fa',
+            fontFamily: "'Share Tech Mono', monospace",
+            fontSize: '0.56rem',
+            cursor: 'pointer',
+            letterSpacing: '0.08em',
+          }}
+        >
+          QUERY
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── MetricRow ─────────────────────────────────────────────────────────────────
 
 function MetricRow({ label, value, unit, precision = 1 }) {
@@ -1204,8 +1326,10 @@ function StatusBar({ anomaly, isAttackActive, isMuted, onMuteToggle }) {
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [persona, setPersona] = useState('agriculture') // 'agriculture' or 'analyst'
   const [isAttackActive,  setIsAttackActive]  = useState(false)
   const [attackTimestamp, setAttackTimestamp] = useState(null)
+  const [provenanceQuery, setProvenanceQuery] = useState(null)
   const [isMuted, setIsMuted] = useState(false)
 
   // sensor readings
@@ -1223,6 +1347,7 @@ export default function App() {
   const corrCurrent = useRef({ ws: 0.92, wh: 0.89, sh: 0.91 })
   const [corr, setCorr] = useState({ ws: 0.92, wh: 0.89, sh: 0.91 })
   const [conf, setConf] = useState(2.0)
+  const [flaggedDomains, setFlaggedDomains] = useState([])
 
   // ghost sensor trigger state — refs prevent double-fire in 80ms loop
   const gwTrigRef = useRef(false)
@@ -1309,6 +1434,15 @@ export default function App() {
       setCorr({ ws: c.ws, wh: c.wh, sh: c.sh })
       setConf(clamp(confVal, 1.0, 100.0))
 
+      // Compute flagged domains based on attack state
+      const flagged = []
+      if (isAttackActive) {
+        flagged.push('WATER')
+        if (elapsed >= 3000) flagged.push('SOIL')
+        if (elapsed >= 10000) flagged.push('HEALTH')
+      }
+      setFlaggedDomains(flagged)
+
       // ── ghost sensor triggers ────────────────────────────────────────────
       if (isAttackActive) {
         // beep sequence on attack start (once)
@@ -1377,6 +1511,7 @@ export default function App() {
     corrCurrent.current = { ws: 0.92, wh: 0.89, sh: 0.91 }
     setCorr({ ws: 0.92, wh: 0.89, sh: 0.91 })
     setConf(2.0)
+    setFlaggedDomains([])
   }, [])
 
   const minTrust = Math.min(water.trustScore, soil.trustScore, health.trustScore)
@@ -1404,10 +1539,11 @@ export default function App() {
             TERRASHIELD
           </span>
           <span style={{ color: '#2d3748', fontSize: '0.92rem', letterSpacing: '0.22em' }}>
-            {' '}// TRI-DOMAIN INTEGRITY MONITOR
+            {' '}// {persona === 'agriculture' ? 'AGRICULTURAL ADVISORY SYSTEM' : 'TRI-DOMAIN INTEGRITY MONITOR'}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <PersonaSelector persona={persona} onChange={setPersona} />
           <Clock />
           <button
             onClick={handleReset}
@@ -1452,6 +1588,36 @@ export default function App() {
           overflow: 'hidden',
           minHeight: 0,
         }}>
+          {/* Persona-specific alert banner */}
+          {(() => {
+            const alert = getAlertMessage(persona, conf, flaggedDomains.length > 0 ? flaggedDomains : ['None'])
+            const bgColor = alert.icon === '✓' ? 'rgba(34,197,94,0.08)'
+              : alert.icon === '⚠' ? 'rgba(245,158,11,0.08)'
+              : 'rgba(239,68,68,0.08)'
+            const borderColor = alert.icon === '✓' ? '#22c55e'
+              : alert.icon === '⚠' ? '#f59e0b'
+              : '#ef4444'
+            return (
+              <div style={{
+                background: bgColor,
+                border: `1px solid ${borderColor}`,
+                padding: '8px 12px',
+                borderRadius: '2px',
+                flexShrink: 0,
+              }}>
+                <div style={{ fontSize: '0.68rem', color: borderColor, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '2px' }}>
+                  {alert.icon} {alert.title}
+                </div>
+                <div style={{ fontSize: '0.6rem', color: '#9ca3af', lineHeight: 1.6 }}>
+                  {alert.msg}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* ProvenanceQuery panel (analyst only) */}
+          <ProvenanceQuery persona={persona} onQuery={(days) => console.log('Query last', days, 'days')} />
+
           {/* stream cards */}
           <div className="stream-cards-container" style={{ flex: 5, display: 'flex', gap: '10px', overflow: 'hidden', minHeight: 0 }}>
             <StreamCard
@@ -1501,18 +1667,50 @@ export default function App() {
           {/* attack trigger */}
           <AttackButton active={isAttackActive} onAttack={handleAttack} />
 
-          {/* correlation panel */}
-          <div className="corr-matrix" style={{ flex: 4, overflow: 'hidden', minHeight: 0 }}>
-            <CorrelationPanel corr={corr} conf={conf} />
-          </div>
+          {/* correlation panel — analysts only */}
+          {persona === 'analyst' && (
+            <div className="corr-matrix" style={{ flex: 4, overflow: 'hidden', minHeight: 0 }}>
+              <CorrelationPanel corr={corr} conf={conf} />
+            </div>
+          )}
+
+          {/* agriculture view: simplified metrics instead of correlation matrix */}
+          {persona === 'agriculture' && (
+            <div style={{
+              flex: 4,
+              background: '#0a0e14',
+              border: '1px solid #1a2030',
+              padding: '12px 14px',
+              borderRadius: '2px',
+              overflow: 'hidden',
+              minHeight: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}>
+              <div style={{ fontSize: '0.68rem', color: '#d1d5db', letterSpacing: '0.1em', fontWeight: 700 }}>
+                📊 SYSTEM OVERVIEW
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.6rem', color: '#9ca3af' }}>
+                <div><strong style={{ color: '#d1d5db' }}>Water System:</strong> {water.trustScore > 95 ? '✓ Operating normally' : '⚠ Check sensor readings'}</div>
+                <div><strong style={{ color: '#d1d5db' }}>Soil System:</strong> {soil.trustScore > 90 ? '✓ Operating normally' : '⚠ Check sensor readings'}</div>
+                <div><strong style={{ color: '#d1d5db' }}>Crop Health:</strong> {health.trustScore > 90 ? '✓ All indicators normal' : '⚠ Monitor closely'}</div>
+                <div style={{ marginTop: '4px', paddingTop: '6px', borderTop: '1px solid #1a2030' }}>
+                  <strong style={{ color: '#22c55e' }}>Recommendation:</strong> {conf < 30 ? 'No action needed — all systems normal.' : conf < 70 ? 'Verify sensor readings before making irrigation changes.' : 'STOP automated irrigation and contact support immediately.'}
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
-        {/* right: ghost sensor sidebar */}
-        <GhostSidebar
-          gwTriggered={gwTriggered}
-          swTriggered={swTriggered}
-          captureTime={captureTime}
-        />
+        {/* right: ghost sensor sidebar — analysts only */}
+        {persona === 'analyst' && (
+          <GhostSidebar
+            gwTriggered={gwTriggered}
+            swTriggered={swTriggered}
+            captureTime={captureTime}
+          />
+        )}
 
       </div>
 
