@@ -753,9 +753,28 @@ function GhostSidebar({ gwTriggered, swTriggered, captureTime }) {
 
 // ─── ProvenancePanel ──────────────────────────────────────────────────────────
 
-function ProvenancePanel({ attackTimestamp, captureTime }) {
+function ProvenancePanel({ attackTimestamp, captureTime, onClose }) {
   const [visibleSteps, setVisibleSteps] = useState(1)
   const timelineRef = useRef(null)
+
+  const handleExport = () => {
+    const report = {
+      title: 'PROVENANCE TRACE — CAUSALITY CHAIN RECONSTRUCTED',
+      timestamp: new Date().toISOString(),
+      chain_length: 5,
+      detection_latency_s: 4.2,
+      cascade_duration: '~8 weeks simulated',
+      confidence: '94.0%',
+      status: 'RESOLVED',
+    }
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `terrashield-provenance-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   // Reveal each step 1.5s after the previous, starting immediately on mount
   useEffect(() => {
@@ -888,21 +907,52 @@ function ProvenancePanel({ attackTimestamp, captureTime }) {
               // CAUSALITY CHAIN RECONSTRUCTED
             </span>
           </div>
-          {/* step progress pills */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '0.54rem', color: '#4b5563', letterSpacing: '0.12em' }}>
-              {visibleSteps} / 5 NODES
-            </span>
-            <div style={{ display: 'flex', gap: '3px' }}>
-              {STEPS.map(s => (
-                <div key={s.id} style={{
-                  width: '18px', height: '3px',
-                  background: s.id <= visibleSteps ? s.color : '#1a2030',
-                  boxShadow: s.id <= visibleSteps ? `0 0 5px ${s.color}` : 'none',
-                  transition: 'background 0.4s ease, box-shadow 0.4s ease',
-                }} />
-              ))}
+          {/* step progress pills + close button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '0.54rem', color: '#4b5563', letterSpacing: '0.12em' }}>
+                {visibleSteps} / 5 NODES
+              </span>
+              <div style={{ display: 'flex', gap: '3px' }}>
+                {STEPS.map(s => (
+                  <div key={s.id} style={{
+                    width: '18px', height: '3px',
+                    background: s.id <= visibleSteps ? s.color : '#1a2030',
+                    boxShadow: s.id <= visibleSteps ? `0 0 5px ${s.color}` : 'none',
+                    transition: 'background 0.4s ease, box-shadow 0.4s ease',
+                  }} />
+                ))}
+              </div>
             </div>
+            <button
+              onClick={onClose}
+              style={{
+                width: '28px',
+                height: '28px',
+                background: 'transparent',
+                border: '1px solid #2d3748',
+                color: '#6b7280',
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.25s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = '#ef4444'
+                e.currentTarget.style.borderColor = '#ef4444'
+                e.currentTarget.style.boxShadow = '0 0 12px rgba(239,68,68,0.3)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = '#6b7280'
+                e.currentTarget.style.borderColor = '#2d3748'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+              title="Close provenance trace"
+            >
+              ✕
+            </button>
           </div>
         </div>
 
@@ -1025,7 +1075,7 @@ function ProvenancePanel({ attackTimestamp, captureTime }) {
               </div>
             </div>
             <button
-              onClick={() => {}}
+              onClick={handleExport}
               style={{
                 padding: '9px 22px',
                 background: 'transparent',
@@ -1048,6 +1098,7 @@ function ProvenancePanel({ attackTimestamp, captureTime }) {
                 e.currentTarget.style.background = 'transparent'
                 e.currentTarget.style.boxShadow  = '0 0 16px rgba(34,197,94,0.18), inset 0 0 12px rgba(34,197,94,0.04)'
               }}
+              title="Download provenance trace as JSON"
             >
               ↗ EXPORT PROVENANCE REPORT
             </button>
@@ -1479,6 +1530,7 @@ export default function App() {
           <ProvenancePanel
             attackTimestamp={attackTimestamp}
             captureTime={captureTime}
+            onClose={() => setShowProvenance(false)}
           />
         </div>
       )}
