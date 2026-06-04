@@ -168,3 +168,93 @@ body::before {
 ::-webkit-scrollbar        { width: 4px; }
 ::-webkit-scrollbar-track  { background: #080b10; }
 ::-webkit-scrollbar-thumb  { background: #1a2030; border-radius: 2px; }
+
+/* ── mobile responsive design ─────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  /* Tablet and small desktops */
+  aside {
+    width: 240px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Tablets */
+  body {
+    font-size: 13px;
+  }
+  
+  aside {
+    display: none !important;
+  }
+  
+  main {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  
+  /* Stream cards stack vertically */
+  .stream-cards-container {
+    flex-direction: column !important;
+  }
+  
+  /* Reduce padding on smaller screens */
+  header {
+    padding: 6px 12px !important;
+  }
+  
+  main {
+    padding: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Mobile phones */
+  body {
+    font-size: 12px;
+  }
+  
+  header {
+    flex-direction: column !important;
+    gap: 6px !important;
+    padding: 6px 8px !important;
+  }
+  
+  header > div:last-child {
+    width: 100%;
+    justify-content: space-between !important;
+  }
+  
+  main {
+    padding: 4px !important;
+    gap: 4px !important;
+  }
+  
+  .stream-cards-container {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+  
+  /* Smaller button padding */
+  button {
+    padding: 6px 12px !important;
+    font-size: 0.55rem !important;
+  }
+  
+  /* Status bar adjustments */
+  footer {
+    padding: 4px 8px !important;
+    gap: 6px !important;
+    height: 28px !important;
+  }
+  
+  /* Correlation panel - better mobile formatting */
+  .corr-matrix {
+    flex-direction: column !important;
+  }
+  
+  /* Provenance panel height for mobile */
+  .provenance-panel {
+    height: 90vh !important;
+  }
+}

@@ -1389,7 +1389,7 @@ export default function App() {
       </header>
 
       {/* ── Content row: main + ghost sidebar ── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, flexDirection: 'row' }}>
 
         {/* left: cards + button + correlation */}
         <main style={{
@@ -1402,7 +1402,7 @@ export default function App() {
           minHeight: 0,
         }}>
           {/* stream cards */}
-          <div style={{ flex: 5, display: 'flex', gap: '10px', overflow: 'hidden', minHeight: 0 }}>
+          <div className="stream-cards-container" style={{ flex: 5, display: 'flex', gap: '10px', overflow: 'hidden', minHeight: 0 }}>
             <StreamCard
               title="WATER SENSOR ARRAY"
               trust={water.trustScore}
@@ -1451,7 +1451,7 @@ export default function App() {
           <AttackButton active={isAttackActive} onAttack={handleAttack} />
 
           {/* correlation panel */}
-          <div style={{ flex: 4, overflow: 'hidden', minHeight: 0 }}>
+          <div className="corr-matrix" style={{ flex: 4, overflow: 'hidden', minHeight: 0 }}>
             <CorrelationPanel corr={corr} conf={conf} />
           </div>
         </main>
@@ -1475,10 +1475,12 @@ export default function App() {
 
       {/* ── Provenance Trace (slides up 12s after attack) ── */}
       {showProvenance && (
-        <ProvenancePanel
-          attackTimestamp={attackTimestamp}
-          captureTime={captureTime}
-        />
+        <div className="provenance-panel">
+          <ProvenancePanel
+            attackTimestamp={attackTimestamp}
+            captureTime={captureTime}
+          />
+        </div>
       )}
 
     </div>
