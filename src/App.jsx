@@ -467,6 +467,59 @@ function getAlertMessage(persona, confidence, flagged) {
   }
 }
 
+// ─── Analysis Mode Selector (Analyst Dashboard) ──────────────────────────────
+
+function AnalysisModeSelector({ persona, analysisMode, setAnalysisMode, theme }) {
+  if (persona !== 'analyst') return null
+
+  const colors = THEMES[theme]
+  const modes = [
+    { key: 'overview', label: 'OVERVIEW', icon: '📊' },
+    { key: 'heatmap', label: 'HEATMAP', icon: '🔥' },
+    { key: 'logs', label: 'LOGS', icon: '🔍' },
+    { key: 'config', label: 'CONFIG', icon: '⚙️' },
+    { key: 'stats', label: 'STATS', icon: '📈' },
+    { key: 'attribution', label: 'YIELD', icon: '🌾' },
+    { key: 'rules', label: 'RULES', icon: '📋' },
+  ]
+
+  return (
+    <div style={{
+      display: 'flex',
+      gap: '4px',
+      flexWrap: 'wrap',
+      padding: '8px 0',
+      borderBottom: `1px solid ${colors.border}`,
+      marginBottom: '8px',
+    }}>
+      <div style={{ fontSize: '0.65rem', color: colors.dimText, fontWeight: 700, alignSelf: 'center', marginRight: '8px' }}>
+        ANALYST MODE:
+      </div>
+      {modes.map(mode => (
+        <button
+          key={mode.key}
+          onClick={() => setAnalysisMode(mode.key)}
+          style={{
+            padding: '5px 10px',
+            fontSize: '0.65rem',
+            fontWeight: 700,
+            letterSpacing: '0.05em',
+            background: analysisMode === mode.key ? colors.accent : colors.cardBg,
+            color: analysisMode === mode.key ? colors.bg : colors.text,
+            border: `1px solid ${analysisMode === mode.key ? colors.accent : colors.border}`,
+            borderRadius: '2px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {mode.icon} {mode.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ─── Sensor Map View (Agriculture Officers) ──────────────────────────────────
 
 function SensorMap({ persona, water, soil, health, isAttackActive, theme }) {
@@ -2085,6 +2138,138 @@ function ProvenancePanel({ attackTimestamp, captureTime, onClose }) {
   )
 }
 
+// ─── Audit Log Explorer (Analyst Dashboard) ───────────────────────────────────
+
+function AuditLogExplorer({ persona, theme, auditLog, filter, setFilter, expandedId, setExpandedId }) {
+  if (persona !== 'analyst') return null
+
+  const colors = THEMES[theme]
+
+  // Mock audit log data if not provided
+  const mockLog = [
+    { id: 1, timestamp: '2026-06-04T14:22:15Z', sensor: 'Water#42', reading: '45.2ppm', signature: '✓ Valid', anomaly: false },
+    { id: 2, timestamp: '2026-06-04T14:17:15Z', sensor: 'Water#42', reading: '42.1ppm', signature: '✓ Valid', anomaly: false },
+    { id: 3, timestamp: '2026-06-04T14:12:15Z', sensor: 'Water#42', reading: '88.5ppm', signature: '⚠ Unverified', anomaly: true, details: { expected: '35-52ppm', deviation: '+36.5ppm', corrWaterSoil: 0.21 } },
+    { id: 4, timestamp: '2026-06-04T14:07:15Z', sensor: 'Water#42', reading: '44.3ppm', signature: '✓ Valid', anomaly: false },
+    { id: 5, timestamp: '2026-06-04T14:02:15Z', sensor: 'Soil#41', reading: '32%', signature: '✓ Valid', anomaly: false },
+  ]
+
+  const data = auditLog.length > 0 ? auditLog : mockLog
+
+  return (
+    <div style={{
+      width: '100%',
+      background: colors.cardBg,
+      border: `1px solid ${colors.border}`,
+      padding: '14px 16px',
+      borderRadius: '2px',
+      transition: 'all 0.3s ease',
+    }}>
+      <div style={{ fontSize: '0.7rem', color: colors.accent, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '12px' }}>
+        🔍 FORENSIC LOG VIEWER
+      </div>
+
+      {/* Search & Filter */}
+      <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            placeholder="Search sensor ID..."
+            value={filter.search}
+            onChange={e => setFilter({ ...filter, search: e.target.value })}
+            style={{
+              flex: 1,
+              padding: '6px 8px',
+              background: colors.bg,
+              color: colors.text,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '2px',
+              fontFamily: "'Share Tech Mono', monospace",
+              fontSize: '0.65rem',
+              outline: 'none',
+            }}
+          />
+          <button style={{
+            padding: '6px 12px',
+            background: colors.accent,
+            color: colors.bg,
+            border: 'none',
+            borderRadius: '2px',
+            fontSize: '0.65rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}>🔍</button>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '0.6rem', color: colors.dimText }}>
+          <label>
+            <input type="checkbox" checked={filter.anomalyOnly} onChange={e => setFilter({ ...filter, anomalyOnly: e.target.checked })} />
+            {' '}Anomalies Only
+          </label>
+        </div>
+      </div>
+
+      {/* Results Table */}
+      <div style={{
+        overflowX: 'auto',
+        maxHeight: '400px',
+        overflowY: 'auto',
+      }}>
+        <table style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          fontSize: '0.65rem',
+          color: colors.text,
+        }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${colors.border}`, color: colors.dimText, fontWeight: 700 }}>
+              <th style={{ padding: '6px 4px', textAlign: 'left' }}>TIMESTAMP</th>
+              <th style={{ padding: '6px 4px', textAlign: 'left' }}>SENSOR</th>
+              <th style={{ padding: '6px 4px', textAlign: 'right' }}>READING</th>
+              <th style={{ padding: '6px 4px', textAlign: 'left' }}>SIGNATURE</th>
+              <th style={{ padding: '6px 4px', textAlign: 'center' }}>ANOMALY</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map(row => (
+              <>
+                <tr key={row.id}
+                  onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
+                  style={{
+                    borderBottom: `1px solid ${colors.border}`,
+                    background: expandedId === row.id ? 'rgba(245,158,11,0.08)' : 'transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <td style={{ padding: '6px 4px' }}>{row.timestamp.slice(11, 19)}</td>
+                  <td style={{ padding: '6px 4px' }}>{row.sensor}</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{row.reading}</td>
+                  <td style={{ padding: '6px 4px', color: row.signature.includes('Valid') ? '#22c55e' : '#f59e0b' }}>{row.signature}</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'center', color: row.anomaly ? '#ef4444' : '#22c55e' }}>
+                    {row.anomaly ? '🔴 YES' : 'No'}
+                  </td>
+                </tr>
+                {expandedId === row.id && row.details && (
+                  <tr style={{ background: `rgba(245,158,11,0.04)` }}>
+                    <td colSpan="5" style={{ padding: '8px 12px', fontSize: '0.6rem', color: colors.dimText }}>
+                      Expected: {row.details.expected} | Deviation: {row.details.deviation} | Corr W-S: {row.details.corrWaterSoil}
+                    </td>
+                  </tr>
+                )}
+              </>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ marginTop: '8px', fontSize: '0.6rem', color: colors.dimText }}>
+        {data.length} records | {data.filter(r => r.anomaly).length} anomalies
+      </div>
+    </div>
+  )
+}
+
 // ─── StatusBar ────────────────────────────────────────────────────────────────
 
 function StatusBar({ anomaly, isAttackActive, isMuted, onMuteToggle }) {
@@ -2224,6 +2409,20 @@ export default function App() {
   const provenanceTrigRef = useRef(false)
   const [showProvenance, setShowProvenance] = useState(false)
   const [liveWeatherData, setLiveWeatherData] = useState({})
+
+  // Analyst-specific state
+  const [analysisMode, setAnalysisMode] = useState('overview') // 'overview' | 'heatmap' | 'logs' | 'config' | 'stats' | 'attribution' | 'rules'
+  const [selectedTimeRange, setSelectedTimeRange] = useState(30) // days
+  const [correlationHistory, setCorrelationHistory] = useState([]) // Array of {timestamp, ws, wh, sh}
+  const [auditLog, setAuditLog] = useState([]) // Admin action history
+  const [ghostDeployments, setGhostDeployments] = useState([]) // Deployed sensors with attack counts
+  const [thresholds, setThresholds] = useState({ correlation: 0.75, sensitivity: 2.5, window: 4 })
+  const [baselineStats, setBaselineStats] = useState({ water: { ph: 7.5, flow: 15, turbidity: 45 }, soil: { moisture: 32, nitrogen: 160, salinity: 0.8 }, health: { malnutrition: 0, disease: 0.2, clinic: 52 } })
+  const [selectedRule, setSelectedRule] = useState(null) // For rule visualization
+  const [attributionData, setAttributionData] = useState({ soil_moisture: 0.58, water_quality: 0.42, health_index: -0.31, r_squared: 0.87 }) // ML coefficients
+  const [heatmapExpanded, setHeatmapExpanded] = useState(false)
+  const [auditLogFilter, setAuditLogFilter] = useState({ search: '', sensorType: 'all', anomalyOnly: false })
+  const [configLogExpanded, setConfigLogExpanded] = useState(null) // Track which config change is expanded
 
   // Fetch live weather, seismic, and flood data on mount
   useEffect(() => {
@@ -2532,6 +2731,13 @@ export default function App() {
         WebkitOverflowScrolling: 'touch',
       }}>
 
+      {/* ── Analysis Mode Selector (Analyst Only) ── */}
+      {persona === 'analyst' && (
+        <div style={{ width: '100%', padding: '8px 12px 0 12px' }}>
+          <AnalysisModeSelector persona={persona} analysisMode={analysisMode} setAnalysisMode={setAnalysisMode} theme={theme} />
+        </div>
+      )}
+
       {/* ── Content row: main + ghost sidebar ── */}
       <div style={{
         display: 'flex',
@@ -2601,7 +2807,21 @@ export default function App() {
           {/* ProvenanceQuery panel (analyst only) */}
           <ProvenanceQuery persona={persona} onQuery={(days) => console.log('Query last', days, 'days')} theme={theme} />
 
-          {/* stream cards */}
+          {/* Audit Log Explorer (analyst only, in 'logs' mode) */}
+          {persona === 'analyst' && analysisMode === 'logs' && (
+            <AuditLogExplorer
+              persona={persona}
+              theme={theme}
+              auditLog={auditLog}
+              filter={auditLogFilter}
+              setFilter={setAuditLogFilter}
+              expandedId={null}
+              setExpandedId={() => {}}
+            />
+          )}
+
+          {/* stream cards - only show in agriculture or 'overview' mode for analyst */}
+          {(persona === 'agriculture' || (persona === 'analyst' && analysisMode === 'overview')) && (
           <div className="stream-cards-container" style={{
             display: 'flex',
             gap: '8px',
@@ -2667,6 +2887,7 @@ export default function App() {
               </>}
             />
           </div>
+          )}
 
           {/* Geohazard Alerts */}
           {(seismicData[selectedLocation]?.maxMagnitude > 3 || floodData[selectedLocation]?.hasActiveFlood) && (
