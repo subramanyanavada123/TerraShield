@@ -526,90 +526,178 @@ function IntroScreen({ onStart, theme }) {
       left: 0,
       right: 0,
       bottom: 0,
-      background: colors.bg,
+      background: `linear-gradient(135deg, ${colors.bg} 0%, ${colors.cardBg} 100%)`,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      gap: '24px',
+      justifyContent: 'space-between',
       zIndex: 1000,
-      padding: '20px',
+      padding: '40px 20px',
       overflowY: 'auto',
     }}>
-      <div style={{ textAlign: 'center', maxWidth: '700px', paddingTop: '40px', paddingBottom: '40px' }}>
-        <h1 style={{ fontSize: '3.2rem', color: colors.accent, letterSpacing: '0.25em', marginBottom: '8px', fontWeight: 700 }}>
+      {/* Top: Branding */}
+      <div style={{ textAlign: 'center', width: '100%' }}>
+        <div style={{
+          fontSize: '0.7rem',
+          color: colors.accent,
+          letterSpacing: '0.2em',
+          marginBottom: '16px',
+          fontWeight: 600,
+          textTransform: 'uppercase',
+        }}>
+          IEEE SA Cybersecurity Hackathon 2026
+        </div>
+
+        <h1 style={{
+          fontSize: '4.2rem',
+          color: colors.accent,
+          letterSpacing: '0.15em',
+          marginBottom: '8px',
+          fontWeight: 900,
+          textShadow: theme === 'dark' ? '0 0 20px rgba(245,158,11,0.4)' : 'none',
+        }}>
           TERRASHIELD
         </h1>
-        <p style={{ fontSize: '1.1rem', color: colors.dimText, letterSpacing: '0.08em', marginBottom: '32px', fontWeight: 500 }}>
-          Cross-Domain IoT Integrity Monitoring | IEEE SA TIPPSS Framework
+
+        <h2 style={{
+          fontSize: '1.3rem',
+          color: colors.text,
+          letterSpacing: '0.08em',
+          marginBottom: '6px',
+          fontWeight: 600,
+        }}>
+          Cross-Domain IoT Integrity Monitor
+        </h2>
+
+        <p style={{
+          fontSize: '0.9rem',
+          color: colors.dimText,
+          letterSpacing: '0.06em',
+          marginBottom: '32px',
+        }}>
+          By <strong>TRIKAAL</strong> | IEEE SA TIPPSS Framework
         </p>
+      </div>
 
-        <div style={{ background: colors.cardBg, border: `2px solid ${colors.accent}`, borderRadius: '4px', padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.2rem', color: colors.accent, letterSpacing: '0.1em', marginBottom: '12px', fontWeight: 600 }}>
-            THE VULNERABILITY
-          </h2>
-          <p style={{ fontSize: '0.95rem', color: colors.text, lineHeight: 2, textAlign: 'left' }}>
-            Single-stream IoT monitors watch one sensor at a time. A coordinated attacker compromises <strong>multiple sensors across water, soil, and health domains simultaneously</strong>. The attack remains invisible because each sensor looks normal in isolation.
-          </p>
-        </div>
-
-        <div style={{ background: colors.successBg, border: `2px solid #10b981`, borderRadius: '4px', padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.2rem', color: '#047857', letterSpacing: '0.1em', marginBottom: '12px', fontWeight: 600 }}>
-            THE SOLUTION
-          </h2>
-          <p style={{ fontSize: '0.95rem', color: colors.text, lineHeight: 2, textAlign: 'left' }}>
-            Real-time <strong>cross-domain correlation engine</strong> detects when independent sensors move out of sync. <strong>Forensic provenance tracing</strong> reconstructs attack sequence with tamper-evident HMAC signatures. Analyze, prove, defend.
-          </p>
-        </div>
-
-        <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '1rem', color: colors.text, letterSpacing: '0.08em', marginBottom: '12px', fontWeight: 600 }}>
-            IEEE SA TIPPSS Framework Coverage
+      {/* Middle: Problem & Solution */}
+      <div style={{ textAlign: 'center', maxWidth: '750px', width: '100%' }}>
+        <div style={{
+          background: colors.cardBg,
+          border: `2px solid ${colors.accent}`,
+          borderRadius: '6px',
+          padding: '24px',
+          marginBottom: '20px',
+          boxShadow: theme === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
+        }}>
+          <h3 style={{
+            fontSize: '1.1rem',
+            color: colors.accent,
+            letterSpacing: '0.12em',
+            marginBottom: '12px',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+          }}>
+            🔍 THE PROBLEM
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          <p style={{
+            fontSize: '0.95rem',
+            color: colors.text,
+            lineHeight: 1.8,
+            margin: 0,
+          }}>
+            Traditional IoT monitors watch <strong>single sensors</strong> in isolation. A coordinated attacker compromises <strong>multiple sensors across water, soil, and health domains simultaneously</strong>. Each sensor appears normal. The attack remains <strong>completely invisible</strong>.
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.successBg,
+          border: '2px solid #10b981',
+          borderRadius: '6px',
+          padding: '24px',
+          marginBottom: '20px',
+          boxShadow: theme === 'dark' ? '0 4px 20px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.05)',
+        }}>
+          <h3 style={{
+            fontSize: '1.1rem',
+            color: '#047857',
+            letterSpacing: '0.12em',
+            marginBottom: '12px',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+          }}>
+            ⚡ THE SOLUTION
+          </h3>
+          <p style={{
+            fontSize: '0.95rem',
+            color: colors.text,
+            lineHeight: 1.8,
+            margin: 0,
+          }}>
+            Real-time <strong>cross-domain correlation engine</strong> detects sensor divergence. <strong>Forensic provenance tracing</strong> reconstructs attack sequences. <strong>Tamper-evident HMAC signatures</strong> prove what happened, when, and why.
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.cardBg,
+          border: `1px solid ${colors.border}`,
+          borderRadius: '6px',
+          padding: '20px',
+          marginBottom: '24px',
+        }}>
+          <p style={{ fontSize: '0.85rem', color: colors.dimText, margin: 0, lineHeight: 1.8 }}>
+            <strong style={{ color: colors.text }}>Live Stats:</strong> 5 countries monitored | 99.8% uptime | 127 attacks detected | 0.2% false positives
+          </p>
+        </div>
+
+        <div>
+          <p style={{ fontSize: '0.8rem', color: colors.dimText, marginBottom: '12px', letterSpacing: '0.08em' }}>
+            IEEE SA TIPPSS FRAMEWORK COVERAGE
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
             {['🤝 Trust', '🔐 Identity', '🔒 Privacy', '🛡️ Protection', '⚠️ Safety', '🔍 Security'].map(label => (
               <div key={label} style={{
-                padding: '10px',
+                padding: '10px 8px',
                 background: colors.cardBg,
                 border: `1px solid ${colors.border}`,
-                borderRadius: '2px',
-                fontSize: '0.8rem',
+                borderRadius: '3px',
+                fontSize: '0.7rem',
                 color: colors.text,
                 letterSpacing: '0.06em',
-                fontWeight: 500,
+                fontWeight: 600,
               }}>
                 {label}
               </div>
             ))}
           </div>
         </div>
-
-        <div style={{ background: colors.cardBg, padding: '16px', borderRadius: '4px', marginBottom: '24px', borderLeft: `4px solid ${colors.accent}` }}>
-          <p style={{ fontSize: '0.85rem', color: colors.dimText, margin: 0, lineHeight: 1.6 }}>
-            <strong>Status:</strong> Live system monitoring agricultural IoT networks in 5 countries | <strong>Uptime:</strong> 99.8% | <strong>Attacks Detected:</strong> 127 | <strong>False Positives:</strong> 0.2%
-          </p>
-        </div>
       </div>
 
+      {/* Bottom: CTA Button */}
       <button
         onClick={onStart}
         style={{
-          padding: '14px 40px',
+          padding: '16px 50px',
           background: colors.accent,
           border: 'none',
           color: colors.bg,
           fontFamily: "'Share Tech Mono', monospace",
-          fontSize: '0.85rem',
-          fontWeight: 700,
-          letterSpacing: '0.12em',
+          fontSize: '0.9rem',
+          fontWeight: 800,
+          letterSpacing: '0.15em',
           cursor: 'pointer',
-          borderRadius: '2px',
+          borderRadius: '3px',
           transition: 'all 0.3s ease',
           textTransform: 'uppercase',
-          marginBottom: '40px',
+          boxShadow: theme === 'dark' ? '0 4px 15px rgba(245,158,11,0.3)' : '0 2px 8px rgba(217,119,6,0.2)',
         }}
-        onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
-        onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+        onMouseEnter={e => {
+          e.target.style.transform = 'scale(1.08)'
+          e.target.style.boxShadow = theme === 'dark' ? '0 6px 25px rgba(245,158,11,0.5)' : '0 4px 15px rgba(217,119,6,0.3)'
+        }}
+        onMouseLeave={e => {
+          e.target.style.transform = 'scale(1)'
+          e.target.style.boxShadow = theme === 'dark' ? '0 4px 15px rgba(245,158,11,0.3)' : '0 2px 8px rgba(217,119,6,0.2)'
+        }}
       >
         ▶ ENTER SYSTEM
       </button>
@@ -2024,19 +2112,22 @@ export default function App() {
 
   return (
     <div style={{
-      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       background: colors.bg,
       fontFamily: "'Share Tech Mono', monospace",
-      overflow: 'auto',
-      WebkitOverflowScrolling: 'touch',
-      width: '100%',
-      maxWidth: '100vw',
+      width: '100vw',
       color: colors.text,
       transition: 'background 0.3s ease, color 0.3s ease',
-      paddingBottom: '60px',
+      minHeight: '100vh',
     }}>
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+        paddingBottom: '60px',
+      }}>
 
       {/* ── Header ── */}
       <header style={{
@@ -2277,6 +2368,7 @@ export default function App() {
           </div>
         )}
 
+      </div>
       </div>
 
       {/* ── Status Bar (fixed to bottom) ── */}
