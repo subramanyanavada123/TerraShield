@@ -73,11 +73,11 @@ if (typeof document !== 'undefined') {
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 const LIVE_LOCATIONS = {
-  Madikeri: { lat: 12.3181, lon: 75.6410, region: 'Central Coorg' },
-  Somwarpet: { lat: 12.3667, lon: 75.5667, region: 'North Coorg' },
-  Virajpet: { lat: 12.1833, lon: 75.8167, region: 'East Coorg' },
-  Ponnampet: { lat: 12.0167, lon: 75.9000, region: 'South Coorg' },
-  Kushalanagar: { lat: 12.2667, lon: 75.7333, region: 'West Coorg' },
+  Madikeri: { lat: 12.3181, lon: 75.6410, sensitivity: 'High-altitude coffee watershed', state: 'Karnataka' },
+  Somwarpet: { lat: 12.3667, lon: 75.5667, sensitivity: 'Endangered spice plantation zone', state: 'Karnataka' },
+  Virajpet: { lat: 12.1833, lon: 75.8167, sensitivity: 'Critical water source area', state: 'Karnataka' },
+  Ponnampet: { lat: 12.0167, lon: 75.9000, sensitivity: 'Protected wildlife corridor', state: 'Karnataka' },
+  Kushalanagar: { lat: 12.2667, lon: 75.7333, sensitivity: 'Agrarian buffer zone', state: 'Karnataka' },
 }
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
@@ -1949,9 +1949,9 @@ export default function App() {
   const [currentLocation, setCurrentLocation] = useState('Madikeri')
 
   // sensor readings with location data
-  const [water,  setWater]  = useState(() => ({ ...genWater(false), location: 'Madikeri', region: 'Central Coorg' }))
-  const [soil,   setSoil]   = useState(() => ({ ...genSoil(false), location: 'Somwarpet', region: 'North Coorg' }))
-  const [health, setHealth] = useState(() => ({ ...genHealth(false, 0), location: 'Virajpet', region: 'East Coorg' }))
+  const [water,  setWater]  = useState(() => ({ ...genWater(false), location: 'Madikeri', sensitivity: 'High-altitude coffee watershed', state: 'Karnataka' }))
+  const [soil,   setSoil]   = useState(() => ({ ...genSoil(false), location: 'Somwarpet', sensitivity: 'Endangered spice plantation zone', state: 'Karnataka' }))
+  const [health, setHealth] = useState(() => ({ ...genHealth(false, 0), location: 'Virajpet', sensitivity: 'Critical water source area', state: 'Karnataka' }))
 
   // sparkline history
   const [waterHist,  setWaterHist]  = useState(INIT_WATER)
@@ -2286,14 +2286,14 @@ export default function App() {
           }}>
             <StreamCard
               title={`💧 WATER - ${water.location}`}
-              subtitle={water.region}
+              subtitle={`${water.state} • ${water.sensitivity}`}
               trust={water.trustScore}
               hist={waterHist}
               sparkKeys={['ph', 'turbidity', 'flowRate']}
               sparkRanges={[[2, 10], [0, 32], [0, 20]]}
               delayMs={0}
               metrics={<>
-                <MetricRow label="Location" value={water.location} unit="" precision={0} />
+                <MetricRow label="Sensitivity" value={water.sensitivity} unit="" precision={0} />
                 <MetricRow label="pH Level"    value={water.ph}         unit="pH"    precision={2} />
                 <MetricRow label="Turbidity"   value={water.turbidity}  unit="NTU"   precision={2} />
                 <MetricRow label="Flow Rate"   value={water.flowRate}   unit="L/min" precision={1} />
@@ -2302,14 +2302,14 @@ export default function App() {
             />
             <StreamCard
               title={`🌱 SOIL - ${soil.location}`}
-              subtitle={soil.region}
+              subtitle={`${soil.state} • ${soil.sensitivity}`}
               trust={soil.trustScore}
               hist={soilHist}
               sparkKeys={['moisture', 'nitrogen', 'salinity']}
               sparkRanges={[[25, 90], [120, 200], [0.5, 5.0]]}
               delayMs={400}
               metrics={<>
-                <MetricRow label="Location" value={soil.location} unit="" precision={0} />
+                <MetricRow label="Sensitivity" value={soil.sensitivity} unit="" precision={0} />
                 <MetricRow label="Moisture"    value={soil.moisture}   unit="%"    precision={1} />
                 <MetricRow label="Nitrogen"    value={soil.nitrogen}   unit="ppm"  precision={0} />
                 <MetricRow label="Salinity"    value={soil.salinity}   unit="dS/m" precision={2} />
@@ -2318,14 +2318,14 @@ export default function App() {
             />
             <StreamCard
               title={`❤️ HEALTH - ${health.location}`}
-              subtitle={health.region}
+              subtitle={`${health.state} • ${health.sensitivity}`}
               trust={health.trustScore}
               hist={healthHist}
               sparkKeys={['malnutrition', 'diseaseIncidence', 'clinicVisits']}
               sparkRanges={[[0, 25], [0, 18], [30, 150]]}
               delayMs={800}
               metrics={<>
-                <MetricRow label="Location" value={health.location} unit="" precision={0} />
+                <MetricRow label="Sensitivity" value={health.sensitivity} unit="" precision={0} />
                 <MetricRow label="Malnutrition Idx"  value={health.malnutrition}     unit="%"     precision={1} />
                 <MetricRow label="Disease Incidence" value={health.diseaseIncidence}  unit="/1000" precision={1} />
                 <MetricRow label="Clinic Visits"     value={health.clinicVisits}      unit="/week" precision={0} />
