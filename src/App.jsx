@@ -840,19 +840,21 @@ function TIPPSSBadge({ principle, theme }) {
 
 function ProvenanceQuery({ persona, onQuery, theme }) {
   const [days, setDays] = useState(30)
+  const colors = THEMES[theme]
   return persona === 'agriculture' ? null : (
     <div style={{
-      background: '#0a0e14',
-      border: '1px solid #1a2030',
+      background: colors.cardBg,
+      border: `1px solid ${colors.border}`,
       padding: '12px 14px',
       marginTop: '8px',
       borderRadius: '2px',
+      transition: 'all 0.3s ease',
     }}>
-      <div style={{ fontSize: '0.62rem', color: '#f59e0b', letterSpacing: '0.12em', marginBottom: '6px' }}>
-        ▶ FORENSIC QUERY
+      <div style={{ fontSize: '0.62rem', color: colors.accent, letterSpacing: '0.12em', marginBottom: '6px', fontWeight: 600 }}>
+        🔍 FORENSIC QUERY
       </div>
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-        <label style={{ fontSize: '0.56rem', color: '#4b5563' }}>
+        <label style={{ fontSize: '0.56rem', color: colors.dimText }}>
           Last <input
             type="number"
             min="1"
@@ -861,12 +863,14 @@ function ProvenanceQuery({ persona, onQuery, theme }) {
             onChange={e => setDays(parseInt(e.target.value))}
             style={{
               width: '40px',
-              background: '#0f1117',
-              border: '1px solid #1a2030',
-              color: '#d1d5db',
+              background: colors.bg,
+              border: `1px solid ${colors.border}`,
+              color: colors.text,
               fontFamily: "'Share Tech Mono', monospace",
               fontSize: '0.56rem',
               padding: '2px 4px',
+              borderRadius: '2px',
+              transition: 'all 0.3s ease',
             }}
           /> days
         </label>
@@ -874,14 +878,18 @@ function ProvenanceQuery({ persona, onQuery, theme }) {
           onClick={() => onQuery(days)}
           style={{
             padding: '4px 8px',
-            background: 'rgba(96,165,250,0.1)',
-            border: '1px solid #60a5fa',
-            color: '#60a5fa',
+            background: `${colors.accent}20`,
+            border: `1px solid ${colors.accent}`,
+            color: colors.accent,
             fontFamily: "'Share Tech Mono', monospace",
             fontSize: '0.56rem',
             cursor: 'pointer',
             letterSpacing: '0.08em',
+            borderRadius: '2px',
+            transition: 'all 0.2s ease',
           }}
+          onMouseEnter={e => e.target.style.opacity = '0.8'}
+          onMouseLeave={e => e.target.style.opacity = '1'}
         >
           QUERY
         </button>
@@ -1084,13 +1092,15 @@ function AttackButton({ active, onAttack }) {
 
 // ─── CorrCell ─────────────────────────────────────────────────────────────────
 
-function CorrCell({ score }) {
+function CorrCell({ score, theme }) {
+  const colors = THEMES[theme]
   if (score === null) {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#080b10', border: '1px solid #0f1520',
-        color: '#1f2937', fontSize: '0.85rem', letterSpacing: '0.12em',
+        background: colors.bg, border: `1px solid ${colors.border}`,
+        color: colors.dimText, fontSize: '0.85rem', letterSpacing: '0.12em',
+        transition: 'all 0.3s ease',
       }}>
         ——
       </div>
@@ -1100,9 +1110,10 @@ function CorrCell({ score }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      gap: '5px', padding: '5px 4px', background: '#080d14', border: '1px solid #0f1520',
+      gap: '5px', padding: '5px 4px', background: colors.cardBg, border: `1px solid ${colors.border}`,
+      transition: 'all 0.3s ease',
     }}>
-      <span style={{ fontSize: '1.0rem', color: '#d1d5db', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.04em' }}>
+      <span style={{ fontSize: '1.0rem', color: colors.text, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.04em' }}>
         {score.toFixed(2)}
       </span>
       <span style={{
@@ -1120,7 +1131,8 @@ function CorrCell({ score }) {
 
 const DOMAINS = ['WATER', 'SOIL', 'HEALTH']
 
-function CorrelationPanel({ corr, conf }) {
+function CorrelationPanel({ corr, conf, theme }) {
+  const colors = THEMES[theme]
   const getScore = (r, c) => {
     if (r === c) return null
     if ((r === 0 && c === 1) || (r === 1 && c === 0)) return corr.ws
@@ -1142,8 +1154,8 @@ function CorrelationPanel({ corr, conf }) {
     ...DOMAINS.map(d => (
       <div key={`ch-${d}`} style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: '0.6rem', color: '#f59e0b', letterSpacing: '0.14em',
-        borderBottom: '1px solid #1a2030', paddingBottom: '4px',
+        fontSize: '0.6rem', color: colors.accent, letterSpacing: '0.14em',
+        borderBottom: `1px solid ${colors.border}`, paddingBottom: '4px',
       }}>
         {d}
       </div>
@@ -1153,30 +1165,30 @@ function CorrelationPanel({ corr, conf }) {
   const dataCells = DOMAINS.flatMap((row, r) => [
     <div key={`rh-${r}`} style={{
       display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-      paddingRight: '10px', fontSize: '0.6rem', color: '#f59e0b',
-      letterSpacing: '0.14em', borderRight: '1px solid #1a2030',
+      paddingRight: '10px', fontSize: '0.6rem', color: colors.accent,
+      letterSpacing: '0.14em', borderRight: `1px solid ${colors.border}`,
     }}>
       {row}
     </div>,
-    ...DOMAINS.map((_, c) => <CorrCell key={`c-${r}-${c}`} score={getScore(r, c)} />),
+    ...DOMAINS.map((_, c) => <CorrCell key={`c-${r}-${c}`} score={getScore(r, c)} theme={theme} />),
   ])
 
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', background: '#0c1018',
-      border: `1px solid ${conf > 50 ? '#ef4444' : '#1a2030'}`,
+      display: 'flex', flexDirection: 'column', background: colors.cardBg,
+      border: `1px solid ${conf > 50 ? '#ef4444' : colors.border}`,
       padding: '10px 14px', height: '100%', overflow: 'hidden',
       animation: conf > 50 ? 'pulsing-border 0.9s ease-in-out infinite' : 'none',
-      transition: 'border-color 0.5s ease',
+      transition: 'border-color 0.5s ease, background 0.3s ease',
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #1a2030', flexShrink: 0,
+        marginBottom: '8px', paddingBottom: '6px', borderBottom: `1px solid ${colors.border}`, flexShrink: 0,
       }}>
-        <span style={{ color: '#f59e0b', fontSize: '0.68rem', letterSpacing: '0.18em', fontWeight: 700 }}>
-          CROSS-DOMAIN CORRELATION MATRIX
+        <span style={{ color: colors.accent, fontSize: '0.68rem', letterSpacing: '0.18em', fontWeight: 700 }}>
+          🔍 CROSS-DOMAIN CORRELATION MATRIX
         </span>
-        <span style={{ fontSize: '0.56rem', color: '#2d3748', letterSpacing: '0.1em' }}>
+        <span style={{ fontSize: '0.56rem', color: colors.dimText, letterSpacing: '0.1em' }}>
           TRI-STREAM INTEGRITY ANALYSIS
         </span>
       </div>
@@ -1192,7 +1204,7 @@ function CorrelationPanel({ corr, conf }) {
           {dataCells}
         </div>
 
-        <div style={{ width: '1px', background: '#1a2030', flexShrink: 0 }} />
+        <div style={{ width: '1px', background: colors.border, flexShrink: 0 }} />
 
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column',
@@ -2337,7 +2349,7 @@ export default function App() {
           {/* correlation panel — analysts only */}
           {persona === 'analyst' && (
             <div className="corr-matrix" style={{ width: '100%', overflow: 'visible', minHeight: '320px' }}>
-              <CorrelationPanel corr={corr} conf={conf} />
+              <CorrelationPanel corr={corr} conf={conf} theme={theme} />
             </div>
           )}
 
