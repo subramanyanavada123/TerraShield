@@ -2540,6 +2540,76 @@ function RuleVisualization({ persona, theme }) {
   )
 }
 
+// ─── Ghost Sensor Deployment Panel (Analyst Dashboard) ────────────────────
+
+function GhostSensorDeploymentPanel({ persona, theme, ghostDeployments, setGhostDeployments }) {
+  if (persona !== 'analyst') return null
+
+  const colors = THEMES[theme]
+  const mockDeployments = [
+    { id: 1, region: 'Belgaum', field: 'Field 7', type: 'Water Quality', domain: 'Irrigation AI', active: true, attacks: 8, lastAttack: '2h ago' },
+    { id: 2, region: 'Dharwad', field: 'Field 12', type: 'Soil Moisture', domain: 'Health Prediction', active: true, attacks: 0, lastAttack: 'N/A' },
+    { id: 3, region: 'Tumkur', field: 'Field 3', type: 'Health Sensor', domain: 'Irrigation AI', active: true, attacks: 2, lastAttack: '1d ago' },
+  ]
+  const deployments = ghostDeployments.length > 0 ? ghostDeployments : mockDeployments
+
+  return (
+    <div style={{
+      width: '100%',
+      background: colors.cardBg,
+      border: `1px solid ${colors.border}`,
+      padding: '14px 16px',
+      borderRadius: '2px',
+    }}>
+      <div style={{ fontSize: '0.7rem', color: colors.accent, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>👻 GHOST SENSOR DEPLOYMENT</span>
+        <button style={{
+          padding: '4px 8px',
+          fontSize: '0.6rem',
+          background: colors.accent,
+          color: colors.bg,
+          border: 'none',
+          borderRadius: '2px',
+          cursor: 'pointer',
+          fontWeight: 700,
+        }}>
+          + DEPLOY
+        </button>
+      </div>
+
+      <div style={{ fontSize: '0.65rem', marginBottom: '12px', color: colors.dimText }}>
+        {deployments.filter(d => d.active).length} Active Decoys | {deployments.reduce((sum, d) => sum + d.attacks, 0)} Attack Attempts
+      </div>
+
+      <div style={{ display: 'grid', gap: '10px' }}>
+        {deployments.map(ghost => (
+          <div key={ghost.id} style={{
+            background: colors.bg,
+            border: `1px solid ${colors.border}`,
+            padding: '10px',
+            borderRadius: '2px',
+            fontSize: '0.64rem',
+          }}>
+            <div style={{ fontWeight: 700, marginBottom: '4px', color: colors.accent }}>
+              {ghost.region} - {ghost.field}
+            </div>
+            <div style={{ color: colors.text, lineHeight: 1.6 }}>
+              <div>Type: {ghost.type}</div>
+              <div>Domain: {ghost.domain}</div>
+              <div style={{ color: ghost.active ? '#22c55e' : '#ef4444', fontWeight: 700 }}>
+                Status: {ghost.active ? '✓ ACTIVE' : '✗ INACTIVE'}
+              </div>
+              <div style={{ marginTop: '6px', color: colors.dimText }}>
+                Attacks: {ghost.attacks} | Last: {ghost.lastAttack}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── StatusBar ────────────────────────────────────────────────────────────────
 
 function StatusBar({ anomaly, isAttackActive, isMuted, onMuteToggle }) {
@@ -3269,6 +3339,7 @@ export default function App() {
 
           {persona === 'analyst' && analysisMode === 'overview' && (
             <>
+              <GhostSensorDeploymentPanel persona={persona} theme={theme} ghostDeployments={ghostDeployments} setGhostDeployments={setGhostDeployments} />
               <CorrelationHeatmap persona={persona} theme={theme} corr={corr} />
               <BaselineStatistics persona={persona} theme={theme} baselineStats={baselineStats} />
               <CropYieldAttribution persona={persona} theme={theme} attributionData={attributionData} />
