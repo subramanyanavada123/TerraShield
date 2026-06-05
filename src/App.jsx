@@ -260,6 +260,121 @@ function getAlertMessage(persona, confidence, flagged) {
   }
 }
 
+// ─── Sensor Map View (Agriculture Officers) ──────────────────────────────────
+
+function SensorMap({ persona, water, soil, health, isAttackActive }) {
+  if (persona !== 'agriculture') return null
+
+  const wStatus = water.trustScore > 95 ? '#22c55e' : '#ef4444'
+  const sStatus = soil.trustScore > 90 ? '#22c55e' : '#ef4444'
+  const hStatus = health.trustScore > 90 ? '#22c55e' : '#ef4444'
+
+  return (
+    <div style={{
+      flex: 1,
+      background: '#0a0e14',
+      border: '1px solid #1a2030',
+      padding: '12px 14px',
+      borderRadius: '2px',
+      overflow: 'hidden',
+      minHeight: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+    }}>
+      <div style={{ fontSize: '0.68rem', color: '#d1d5db', letterSpacing: '0.1em', fontWeight: 700 }}>
+        🗺️ FIELD SENSOR MAP
+      </div>
+      <div style={{ flex: 1, background: '#060810', border: '1px solid #0f1520', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <svg viewBox="0 0 300 200" width="100%" height="100%" style={{ maxWidth: '100%', maxHeight: '100%' }}>
+          <rect x="10" y="10" width="280" height="180" fill="none" stroke="#1a2030" strokeWidth={1} />
+          <circle cx="80" cy="50" r="8" fill={wStatus} />
+          <text x="80" y="75" textAnchor="middle" fontSize="10" fill="#9ca3af">W</text>
+          <circle cx="150" cy="120" r="8" fill={sStatus} />
+          <text x="150" y="145" textAnchor="middle" fontSize="10" fill="#9ca3af">S</text>
+          <circle cx="220" cy="80" r="8" fill={hStatus} />
+          <text x="220" y="105" textAnchor="middle" fontSize="10" fill="#9ca3af">H</text>
+          {isAttackActive && <text x="150" y="185" textAnchor="middle" fontSize="11" fill="#ef4444">⚠ ALERT</text>}
+        </svg>
+      </div>
+      <div style={{ fontSize: '0.56rem', color: '#4b5563' }}>
+        🟢 Normal | 🔴 Alert {isAttackActive && '| ⚠️ Attack Detected'}
+      </div>
+    </div>
+  )
+}
+
+// ─── Ghost Deployment Controls ────────────────────────────────────────────────
+
+function GhostControls({ persona, onDeploy, onRevoke }) {
+  if (persona !== 'analyst') return null
+
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <div style={{
+      background: '#0a0e14',
+      border: '1px solid #1a2030',
+      padding: '10px 12px',
+      borderRadius: '2px',
+      marginTop: '8px',
+    }}>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          width: '100%',
+          background: 'transparent',
+          border: '1px solid #60a5fa',
+          color: '#60a5fa',
+          padding: '6px 8px',
+          fontSize: '0.6rem',
+          fontFamily: "'Share Tech Mono', monospace",
+          cursor: 'pointer',
+          letterSpacing: '0.08em',
+          textAlign: 'left',
+        }}
+      >
+        {expanded ? '▼' : '▶'} HONEYPOT DEPLOYMENT
+      </button>
+      {expanded && (
+        <div style={{ marginTop: '8px', display: 'flex', gap: '6px' }}>
+          <button
+            onClick={() => onDeploy()}
+            style={{
+              flex: 1,
+              background: 'rgba(34,197,94,0.1)',
+              border: '1px solid #22c55e',
+              color: '#22c55e',
+              padding: '4px 6px',
+              fontSize: '0.56rem',
+              fontFamily: "'Share Tech Mono', monospace",
+              cursor: 'pointer',
+              letterSpacing: '0.08em',
+            }}
+          >
+            ⊕ ACTIVATE ALL
+          </button>
+          <button
+            onClick={() => onRevoke()}
+            style={{
+              flex: 1,
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid #ef4444',
+              color: '#ef4444',
+              padding: '4px 6px',
+              fontSize: '0.56rem',
+              fontFamily: "'Share Tech Mono', monospace",
+              cursor: 'pointer',
+              letterSpacing: '0.08em',
+            }}
+          >
+            ⊗ DISABLE ALL
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Provenance Query Panel ───────────────────────────────────────────────────
 
 function ProvenanceQuery({ persona, onQuery }) {
@@ -1664,8 +1779,34 @@ export default function App() {
             />
           </div>
 
-          {/* attack trigger */}
-          <AttackButton active={isAttackActive} onAttack={handleAttack} />
+          {/* action buttons */}
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <div style={{ flex: 1 }}>
+              <AttackButton active={isAttackActive} onAttack={handleAttack} />
+            </div>
+            {conf > 20 && (
+              <button
+                onClick={() => setShowProvenance(true)}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  background: conf > 50 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                  border: `1px solid ${conf > 50 ? '#ef4444' : '#f59e0b'}`,
+                  color: conf > 50 ? '#ef4444' : '#f59e0b',
+                  fontFamily: "'Share Tech Mono', monospace",
+                  fontSize: '0.62rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  letterSpacing: '0.1em',
+                  borderRadius: '2px',
+                  transition: 'all 0.3s ease',
+                  textTransform: 'uppercase',
+                }}
+              >
+                🔍 QUERY PROVENANCE
+              </button>
+            )}
+          </div>
 
           {/* correlation panel — analysts only */}
           {persona === 'analyst' && (
@@ -1674,32 +1815,18 @@ export default function App() {
             </div>
           )}
 
-          {/* agriculture view: simplified metrics instead of correlation matrix */}
+          {/* agriculture view: map + simplified metrics */}
           {persona === 'agriculture' && (
-            <div style={{
-              flex: 4,
-              background: '#0a0e14',
-              border: '1px solid #1a2030',
-              padding: '12px 14px',
-              borderRadius: '2px',
-              overflow: 'hidden',
-              minHeight: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-            }}>
-              <div style={{ fontSize: '0.68rem', color: '#d1d5db', letterSpacing: '0.1em', fontWeight: 700 }}>
-                📊 SYSTEM OVERVIEW
-              </div>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.6rem', color: '#9ca3af' }}>
-                <div><strong style={{ color: '#d1d5db' }}>Water System:</strong> {water.trustScore > 95 ? '✓ Operating normally' : '⚠ Check sensor readings'}</div>
-                <div><strong style={{ color: '#d1d5db' }}>Soil System:</strong> {soil.trustScore > 90 ? '✓ Operating normally' : '⚠ Check sensor readings'}</div>
-                <div><strong style={{ color: '#d1d5db' }}>Crop Health:</strong> {health.trustScore > 90 ? '✓ All indicators normal' : '⚠ Monitor closely'}</div>
-                <div style={{ marginTop: '4px', paddingTop: '6px', borderTop: '1px solid #1a2030' }}>
-                  <strong style={{ color: '#22c55e' }}>Recommendation:</strong> {conf < 30 ? 'No action needed — all systems normal.' : conf < 70 ? 'Verify sensor readings before making irrigation changes.' : 'STOP automated irrigation and contact support immediately.'}
-                </div>
-              </div>
-            </div>
+            <SensorMap persona={persona} water={water} soil={soil} health={health} isAttackActive={isAttackActive} />
+          )}
+
+          {/* analyst controls */}
+          {persona === 'analyst' && conf > 0 && (
+            <GhostControls
+              persona={persona}
+              onDeploy={() => console.log('Deploy honeypots')}
+              onRevoke={() => console.log('Revoke honeypots')}
+            />
           )}
         </main>
 
