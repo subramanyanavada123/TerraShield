@@ -170,57 +170,71 @@ function playRumble(enabled = true) {
 }
 
 // ─── sensor generators ────────────────────────────────────────────────────────
+// Stable baseline values (don't change frequently)
+const SENSOR_BASELINES = {
+  water: {
+    ph_baseline: 7.50,
+    flowRate_baseline: 15.0,
+  },
+  soil: {
+    nitrogen_baseline: 160.0,
+  },
+  health: {
+    clinicVisits_baseline: 52, // FIXED - doesn't change frequently
+  }
+}
 
 function genWater(attacked) {
   if (attacked) return {
-    ph:          clamp(jitter(3.20,  0.18), 2.8,  3.8),
-    turbidity:   clamp(jitter(28.0,  1.40), 23.5, 32.5),
-    flowRate:    clamp(jitter(2.10,  0.18), 1.6,  2.7),
-    trustScore:  clamp(jitter(12.0,  1.80), 7,    18),
+    ph:          clamp(jitter(3.20,  0.15), 2.9,  3.7),     // Volatile during attack
+    turbidity:   clamp(jitter(28.0,  1.20), 24.0, 32.0),    // Changes rapidly
+    flowRate:    clamp(jitter(2.10,  0.12), 1.7,  2.5),     // Changes rapidly
+    trustScore:  clamp(jitter(12.0,  1.50), 8,    16),      // Critical
   }
   return {
-    ph:          clamp(jitter(7.50,  0.22), 6.5,  8.5),
-    turbidity:   clamp(jitter(2.10,  0.38), 0.1,  4.0),
-    flowRate:    clamp(jitter(15.0,  0.65), 12.0, 18.0),
-    trustScore:  clamp(jitter(99.0,  0.45), 98.0, 100.0),
+    ph:          clamp(jitter(SENSOR_BASELINES.water.ph_baseline, 0.12), 6.8, 8.2),  // Stable, slight variation
+    turbidity:   clamp(jitter(2.10,  0.25), 0.5,  3.5),     // Small variations
+    flowRate:    clamp(jitter(SENSOR_BASELINES.water.flowRate_baseline, 0.35), 13.0, 17.0), // Stable baseline
+    trustScore:  clamp(jitter(99.0,  0.35), 98.2, 99.8),    // Very high, stable
   }
 }
 
 function genSoil(attacked) {
   if (attacked) return {
-    moisture:    clamp(jitter(78.0,  2.00), 71,   86),
-    nitrogen:    clamp(jitter(160.0, 7.00), 140,  180),
-    salinity:    clamp(jitter(3.80,  0.18), 3.2,  4.4),
-    trustScore:  clamp(jitter(34.0,  2.80), 26,   43),
+    moisture:    clamp(jitter(78.0,  1.80), 72,   84),      // Volatile during attack
+    nitrogen:    clamp(jitter(SENSOR_BASELINES.soil.nitrogen_baseline, 3.5), 150, 170), // Minimal change
+    salinity:    clamp(jitter(3.80,  0.16), 3.4,  4.2),     // Changes rapidly
+    trustScore:  clamp(jitter(34.0,  2.50), 27,   41),      // Critical
   }
   return {
-    moisture:    clamp(jitter(45.0,  2.80), 35.0, 55.0),
-    nitrogen:    clamp(jitter(160.0, 7.00), 140,  180),
-    salinity:    clamp(jitter(1.10,  0.14), 0.8,  1.4),
-    trustScore:  clamp(jitter(98.5,  0.55), 97.0, 100.0),
+    moisture:    clamp(jitter(45.0,  2.20), 38.0, 52.0),    // Realistic variations
+    nitrogen:    clamp(jitter(SENSOR_BASELINES.soil.nitrogen_baseline, 2.5), 154, 166), // Very stable
+    salinity:    clamp(jitter(1.10,  0.10), 0.95, 1.25),    // Stable
+    trustScore:  clamp(jitter(98.5,  0.45), 97.5, 99.5),    // Very high, stable
   }
 }
 
 function genHealth(attacked, elapsedMs) {
+  // Clinic visits is a WEEKLY metric - stays constant unless week changes
+  const clinicVisitsBaseline = SENSOR_BASELINES.health.clinicVisits_baseline
+
   if (!attacked) return {
-    malnutrition:     clamp(jitter(5.5,  0.42), 4.0,  7.0),
-    diseaseIncidence: clamp(jitter(3.5,  0.42), 2.0,  5.0),
-    clinicVisits:     Math.round(clamp(jitter(50,  3.5), 40, 60)),
-    trustScore:       clamp(jitter(99.5, 0.28), 99.0, 100.0),
+    malnutrition:     clamp(jitter(5.5,  0.35), 4.5,  6.5),          // Stable range
+    diseaseIncidence: clamp(jitter(3.5,  0.30), 2.5,  4.5),          // Stable range
+    clinicVisits:     clinicVisitsBaseline,                           // FIXED - doesn't change
+    trustScore:       clamp(jitter(99.5, 0.25), 99.0, 100.0),        // Very high, stable
   }
   return {
     malnutrition:     elapsedMs >= 8000
-      ? clamp(jitter(19.0, 0.65), 17.0, 22.0)
-      : clamp(jitter(5.5,  0.42), 4.0,  7.0),
+      ? clamp(jitter(19.0, 0.60), 17.5, 20.5)
+      : clamp(jitter(5.5,  0.35), 4.5,  6.5),
     diseaseIncidence: elapsedMs >= 10000
-      ? clamp(jitter(14.0, 0.65), 12.0, 16.5)
-      : clamp(jitter(3.5,  0.42), 2.0,  5.0),
-    clinicVisits:     Math.round(elapsedMs >= 12000
-      ? clamp(jitter(134,  4.5), 122, 146)
-      : clamp(jitter(50,   3.5), 40,  60)),
+      ? clamp(jitter(14.0, 0.60), 12.5, 15.5)
+      : clamp(jitter(3.5,  0.30), 2.5,  4.5),
+    clinicVisits:     clinicVisitsBaseline,                           // FIXED - even during attack
     trustScore:       elapsedMs >= 10000
-      ? clamp(jitter(41.0, 2.20), 34,  49)
-      : clamp(jitter(99.5, 0.28), 99.0, 100.0),
+      ? clamp(jitter(41.0, 2.00), 35,   48)
+      : clamp(jitter(99.5, 0.25), 99.0, 100.0),
   }
 }
 
