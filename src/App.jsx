@@ -97,8 +97,66 @@ const fetchLiveWeatherData = async (location) => {
       weatherCode: current.weather_code || 0,
     }
   } catch (err) {
-    console.log(`⚠️ API fetch failed for ${location}, using simulation`)
-    return null // Fall back to simulation
+    console.log(`⚠️ Weather API fetch failed for ${location}`)
+    return null
+  }
+}
+
+// Fetch seismic data from USGS (free, no API key)
+const fetchSeismicData = async (location) => {
+  try {
+    const { lat, lon } = LIVE_LOCATIONS[location]
+    // Get earthquakes within 500km in past 30 days
+    const response = await fetch(
+      `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson`
+    )
+    const data = await response.json()
+
+    // Filter earthquakes near location (within ~300km)
+    const nearbyQuakes = data.features.filter(f => {
+      const [qLon, qLat] = f.geometry.coordinates
+      const distance = Math.sqrt(Math.pow(qLat - lat, 2) + Math.pow(qLon - lon, 2))
+      return distance < 3 // ~3 degrees ≈ 300km
+    })
+
+    const maxMagnitude = nearbyQuakes.length > 0
+      ? Math.max(...nearbyQuakes.map(q => q.properties.mag))
+      : 0
+
+    return {
+      nearbyQuakes: nearbyQuakes.length,
+      maxMagnitude: maxMagnitude,
+      risk: maxMagnitude > 4 ? 'HIGH' : maxMagnitude > 3 ? 'MEDIUM' : 'LOW',
+    }
+  } catch (err) {
+    console.log(`⚠️ Seismic API fetch failed for ${location}`)
+    return null
+  }
+}
+
+// Fetch flood/hazard warnings from GDACS (free, no API key)
+const fetchFloodWarnings = async (location) => {
+  try {
+    const { lat, lon } = LIVE_LOCATIONS[location]
+    // GDACS alerts endpoint
+    const response = await fetch(
+      `https://www.gdacs.org/api/v1/events?limit=50&areatype=geom&geometry=${lon},${lat},50`
+    )
+    const data = await response.json()
+
+    // Look for flood/hazard alerts
+    const floodAlerts = data.events?.filter(e =>
+      e.eventtype === 'FL' || e.eventtype === 'LS'
+    ) || []
+
+    return {
+      floodAlerts: floodAlerts.length,
+      hasActiveFlood: floodAlerts.length > 0,
+      alertSeverity: floodAlerts.length > 0 ? floodAlerts[0].severity || 'MEDIUM' : 'NONE',
+    }
+  } catch (err) {
+    console.log(`⚠️ Flood warnings API fetch failed for ${location}`)
+    return null
   }
 }
 
@@ -2128,6 +2186,8 @@ export default function App() {
   const [selectedLocation, setSelectedLocation] = useState('Madikeri')
   const [falseAlerts, setFalseAlerts] = useState(0)
   const [totalAlerts, setTotalAlerts] = useState(0)
+  const [seismicData, setSeismicData] = useState({})
+  const [floodData, setFloodData] = useState({})
 
   // sensor readings - all from selected location
   const locationData = LIVE_LOCATIONS[selectedLocation]
@@ -2162,18 +2222,34 @@ export default function App() {
   const [showProvenance, setShowProvenance] = useState(false)
   const [liveWeatherData, setLiveWeatherData] = useState({})
 
-  // Fetch live weather on mount
+  // Fetch live weather, seismic, and flood data on mount
   useEffect(() => {
-    const fetchWeather = async () => {
+    const fetchAllData = async () => {
       const weather = {}
+      const seismic = {}
+      const floods = {}
+
       for (const loc of Object.keys(LIVE_LOCATIONS)) {
-        const data = await fetchLiveWeatherData(loc)
-        if (data) weather[loc] = data
+        const w = await fetchLiveWeatherData(loc)
+        if (w) weather[loc] = w
+
+        const s = await fetchSeismicData(loc)
+        if (s) seismic[loc] = s
+
+        const f = await fetchFloodWarnings(loc)
+        if (f) floods[loc] = f
       }
+
       setLiveWeatherData(weather)
-      console.log('✅ Live weather data loaded:', weather)
+      setSeismicData(seismic)
+      setFloodData(floods)
+
+      console.log('✅ Live data loaded')
+      console.log('  Weather:', Object.keys(weather).length, 'locations')
+      console.log('  Seismic:', Object.keys(seismic).length, 'locations')
+      console.log('  Floods:', Object.keys(floods).length, 'locations')
     }
-    fetchWeather()
+    fetchAllData()
   }, [])
 
   // water tick — 2s
@@ -2187,11 +2263,19 @@ export default function App() {
         d.ph = clamp(d.ph + (w.humidity - 70) * 0.02, 4, 9)
         d.turbidity = clamp(d.turbidity + w.rainfall * 2, 0, 30)
       }
+      // Adjust with seismic/flood data if available
+      if (seismicData[selectedLocation]?.maxMagnitude > 4) {
+        d.trustScore = clamp(d.trustScore - 25, 5, 99)
+      }
+      if (floodData[selectedLocation]?.hasActiveFlood) {
+        d.trustScore = clamp(d.trustScore - 30, 5, 99)
+        d.turbidity = clamp(d.turbidity + 8, 0, 30)
+      }
       setWater(d)
       setWaterHist(h => pushHistory(h, d))
     }, 2000)
     return () => clearInterval(id)
-  }, [isAttackActive, liveWeatherData, selectedLocation])
+  }, [isAttackActive, liveWeatherData, selectedLocation, seismicData, floodData])
 
   // soil tick — 2s
   useEffect(() => {
@@ -2204,11 +2288,19 @@ export default function App() {
         d.moisture = clamp(d.moisture + w.humidity * 0.3, 25, 90)
         d.salinity = clamp(d.salinity + w.rainfall * 0.05, 0.5, 4)
       }
+      // Adjust with seismic/flood data if available
+      if (seismicData[selectedLocation]?.maxMagnitude > 4) {
+        d.trustScore = clamp(d.trustScore - 20, 5, 99)
+      }
+      if (floodData[selectedLocation]?.hasActiveFlood) {
+        d.trustScore = clamp(d.trustScore - 25, 5, 99)
+        d.moisture = clamp(d.moisture + 15, 25, 90)
+      }
       setSoil(d)
       setSoilHist(h => pushHistory(h, d))
     }, 2000)
     return () => clearInterval(id)
-  }, [isAttackActive, liveWeatherData, selectedLocation])
+  }, [isAttackActive, liveWeatherData, selectedLocation, seismicData, floodData])
 
   // health tick — 3s
   useEffect(() => {
@@ -2222,11 +2314,19 @@ export default function App() {
         d.diseaseIncidence = clamp(d.diseaseIncidence - w.humidity * 0.05, 0, 15)
         d.malnutrition = clamp(d.malnutrition - w.rainfall * 0.1, 5, 20)
       }
+      // Adjust with seismic/flood data if available
+      if (seismicData[selectedLocation]?.maxMagnitude > 4) {
+        d.trustScore = clamp(d.trustScore - 15, 5, 99)
+      }
+      if (floodData[selectedLocation]?.hasActiveFlood) {
+        d.trustScore = clamp(d.trustScore - 20, 5, 99)
+        d.diseaseIncidence = clamp(d.diseaseIncidence + 3, 0, 20)
+      }
       setHealth(d)
       setHealthHist(h => pushHistory(h, d))
     }, 3000)
     return () => clearInterval(id)
-  }, [isAttackActive, attackTimestamp, liveWeatherData, selectedLocation])
+  }, [isAttackActive, attackTimestamp, liveWeatherData, selectedLocation, seismicData, floodData])
 
   // 80ms loop: correlation lerp + ghost sensor triggers
   useEffect(() => {
@@ -2571,6 +2671,44 @@ export default function App() {
               </>}
             />
           </div>
+
+          {/* Geohazard Alerts */}
+          {(seismicData[selectedLocation]?.maxMagnitude > 3 || floodData[selectedLocation]?.hasActiveFlood) && (
+            <div style={{
+              width: '100%',
+              background: colors.errorBg,
+              border: '2px solid #ef4444',
+              borderRadius: '4px',
+              padding: '12px 14px',
+              marginTop: '12px',
+            }}>
+              <div style={{ fontSize: '0.7rem', color: '#ef4444', letterSpacing: '0.1em', fontWeight: 700, marginBottom: '8px' }}>
+                🚨 GEOHAZARD ALERTS - INFRASTRUCTURE AT RISK
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '0.65rem' }}>
+                {seismicData[selectedLocation]?.maxMagnitude > 3 && (
+                  <div style={{ background: 'rgba(239,68,68,0.2)', padding: '8px', borderRadius: '2px', borderLeft: '3px solid #ef4444' }}>
+                    <strong>🔴 SEISMIC ACTIVITY</strong>
+                    <div style={{ color: colors.dimText, marginTop: '4px' }}>
+                      Magnitude: {seismicData[selectedLocation].maxMagnitude.toFixed(1)}
+                      <br />Risk: {seismicData[selectedLocation].risk}
+                      <br />Impact: Infrastructure integrity check needed
+                    </div>
+                  </div>
+                )}
+                {floodData[selectedLocation]?.hasActiveFlood && (
+                  <div style={{ background: 'rgba(239,68,68,0.2)', padding: '8px', borderRadius: '2px', borderLeft: '3px solid #ef4444' }}>
+                    <strong>🌊 FLOOD WARNING</strong>
+                    <div style={{ color: colors.dimText, marginTop: '4px' }}>
+                      Active Alerts: {floodData[selectedLocation].floodAlerts}
+                      <br />Severity: {floodData[selectedLocation].alertSeverity}
+                      <br />Impact: Water contamination risk, soil stability at risk
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Metrics Dashboard */}
           <div style={{
