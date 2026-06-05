@@ -2270,6 +2270,276 @@ function AuditLogExplorer({ persona, theme, auditLog, filter, setFilter, expande
   )
 }
 
+// ─── Configuration Changes Log (Analyst Dashboard) ────────────────────────────
+
+function ConfigChangesLog({ persona, theme, configLog, expandedId, setExpandedId }) {
+  if (persona !== 'analyst') return null
+
+  const colors = THEMES[theme]
+  const mockLog = [
+    { id: 1, timestamp: '2026-06-04T13:45:30Z', admin: 'raj_sharma', change: 'Threshold Update', oldVal: '0.75', newVal: '0.80', status: '✓' },
+    { id: 2, timestamp: '2026-06-04T12:30:15Z', admin: 'maya_verma', change: 'Ghost Deploy', oldVal: 'N/A', newVal: 'Belgaum Field 7', status: '✓' },
+    { id: 3, timestamp: '2026-06-03T10:15:45Z', admin: 'raj_sharma', change: 'Detection Mode', oldVal: 'OFF', newVal: 'ON', status: '✓' },
+  ]
+  const data = configLog.length > 0 ? configLog : mockLog
+
+  return (
+    <div style={{
+      width: '100%',
+      background: colors.cardBg,
+      border: `1px solid ${colors.border}`,
+      padding: '14px 16px',
+      borderRadius: '2px',
+      transition: 'all 0.3s ease',
+    }}>
+      <div style={{ fontSize: '0.7rem', color: colors.accent, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '12px' }}>
+        📋 CONFIGURATION AUDIT TRAIL
+      </div>
+
+      <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.65rem' }}>
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${colors.border}`, color: colors.dimText, fontWeight: 700 }}>
+              <th style={{ padding: '6px 4px', textAlign: 'left' }}>TIME</th>
+              <th style={{ padding: '6px 4px', textAlign: 'left' }}>ADMIN</th>
+              <th style={{ padding: '6px 4px', textAlign: 'left' }}>CHANGE</th>
+              <th style={{ padding: '6px 4px', textAlign: 'left' }}>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map(row => (
+              <tr key={row.id} onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
+                style={{ borderBottom: `1px solid ${colors.border}`, cursor: 'pointer', background: expandedId === row.id ? 'rgba(245,158,11,0.08)' : 'transparent' }}>
+                <td style={{ padding: '6px 4px' }}>{row.timestamp.slice(11, 19)}</td>
+                <td style={{ padding: '6px 4px' }}>{row.admin}</td>
+                <td style={{ padding: '6px 4px' }}>{row.change}</td>
+                <td style={{ padding: '6px 4px', color: '#22c55e' }}>{row.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// ─── Regional Baseline Statistics (Analyst Dashboard) ────────────────────────
+
+function BaselineStatistics({ persona, theme, baselineStats }) {
+  if (persona !== 'analyst') return null
+
+  const colors = THEMES[theme]
+  const domains = [
+    { name: 'WATER', icon: '💧', data: baselineStats.water || { ph: 7.5, flow: 15, turbidity: 45 } },
+    { name: 'SOIL', icon: '🌱', data: baselineStats.soil || { moisture: 32, nitrogen: 160, salinity: 0.8 } },
+    { name: 'HEALTH', icon: '🏥', data: baselineStats.health || { malnutrition: 0.5, disease: 0.2, clinic: 52 } },
+  ]
+
+  return (
+    <div style={{
+      width: '100%',
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '12px',
+    }}>
+      {domains.map(domain => (
+        <div key={domain.name} style={{
+          background: colors.cardBg,
+          border: `1px solid ${colors.border}`,
+          padding: '14px 16px',
+          borderRadius: '2px',
+          transition: 'all 0.3s ease',
+        }}>
+          <div style={{ fontSize: '0.7rem', color: colors.accent, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '12px' }}>
+            {domain.icon} {domain.name} BASELINE
+          </div>
+          <div style={{ fontSize: '0.6rem', color: colors.text, lineHeight: 2 }}>
+            {Object.entries(domain.data).slice(0, 3).map(([key, val]) => (
+              <div key={key}>
+                <span style={{ textTransform: 'capitalize' }}>{key}:</span> <span style={{ color: colors.accent }}>{typeof val === 'number' ? val.toFixed(2) : val}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: '8px', fontSize: '0.55rem', color: colors.dimText }}>Confidence: 94%</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Correlation Heatmap (Analyst Dashboard) ────────────────────────────────
+
+function CorrelationHeatmap({ persona, theme, corr }) {
+  if (persona !== 'analyst') return null
+
+  const colors = THEMES[theme]
+  const pairs = [
+    { name: 'Water ↔ Soil', score: corr.ws },
+    { name: 'Water ↔ Health', score: corr.wh },
+    { name: 'Soil ↔ Health', score: corr.sh },
+  ]
+
+  const getColor = (score) => {
+    if (score > 0.8) return '#22c55e'
+    if (score > 0.5) return '#f59e0b'
+    return '#ef4444'
+  }
+
+  return (
+    <div style={{
+      width: '100%',
+      background: colors.cardBg,
+      border: `1px solid ${colors.border}`,
+      padding: '14px 16px',
+      borderRadius: '2px',
+    }}>
+      <div style={{ fontSize: '0.7rem', color: colors.accent, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '12px' }}>
+        🔥 CORRELATION HEATMAP
+      </div>
+      <div style={{ display: 'grid', gap: '8px' }}>
+        {pairs.map(pair => (
+          <div key={pair.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.65rem', flex: 1 }}>{pair.name}</span>
+            <div style={{
+              width: '120px',
+              height: '24px',
+              background: `linear-gradient(90deg, ${getColor(0)}, ${getColor(pair.score)})`,
+              borderRadius: '2px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '0.6rem',
+              fontWeight: 700,
+            }}>
+              {pair.score.toFixed(2)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Threshold Tuning Panel (Analyst Dashboard) ────────────────────────────
+
+function ThresholdTuningPanel({ persona, theme, thresholds, setThresholds }) {
+  if (persona !== 'analyst') return null
+
+  const colors = THEMES[theme]
+
+  return (
+    <div style={{
+      width: '100%',
+      background: colors.cardBg,
+      border: `1px solid ${colors.border}`,
+      padding: '14px 16px',
+      borderRadius: '2px',
+    }}>
+      <div style={{ fontSize: '0.7rem', color: colors.accent, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        ⚙️ THRESHOLD TUNING
+        <TIPPSSBadge principle="Protection" theme={theme} />
+      </div>
+      <div style={{ display: 'grid', gap: '12px' }}>
+        {[
+          { label: 'Correlation Threshold', min: 0.5, max: 0.95, step: 0.05, key: 'correlation' },
+          { label: 'Sensitivity (σ)', min: 1.5, max: 3.5, step: 0.25, key: 'sensitivity' },
+          { label: 'Time Window (h)', min: 1, max: 24, step: 1, key: 'window' },
+        ].map(ctrl => (
+          <div key={ctrl.key}>
+            <div style={{ fontSize: '0.65rem', fontWeight: 700, marginBottom: '4px' }}>
+              {ctrl.label}: <span style={{ color: colors.accent }}>{thresholds[ctrl.key].toFixed(2)}</span>
+            </div>
+            <input
+              type="range"
+              min={ctrl.min}
+              max={ctrl.max}
+              step={ctrl.step}
+              value={thresholds[ctrl.key]}
+              onChange={e => setThresholds({ ...thresholds, [ctrl.key]: parseFloat(e.target.value) })}
+              style={{ width: '100%', cursor: 'pointer' }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Crop Yield Attribution (Analyst Dashboard) ────────────────────────────
+
+function CropYieldAttribution({ persona, theme, attributionData }) {
+  if (persona !== 'analyst') return null
+
+  const colors = THEMES[theme]
+
+  return (
+    <div style={{
+      width: '100%',
+      background: colors.cardBg,
+      border: `1px solid ${colors.border}`,
+      padding: '14px 16px',
+      borderRadius: '2px',
+    }}>
+      <div style={{ fontSize: '0.7rem', color: colors.accent, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '12px' }}>
+        🌾 CROP YIELD ATTRIBUTION (R² = {attributionData.r_squared.toFixed(2)})
+      </div>
+      <div style={{ fontSize: '0.65rem', color: colors.text, display: 'grid', gap: '8px' }}>
+        {Object.entries(attributionData).filter(([k]) => k !== 'r_squared').map(([key, val]) => (
+          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ flex: 1, textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</span>
+            <div style={{ width: '100px', height: '16px', background: `linear-gradient(90deg, transparent, ${val > 0 ? '#22c55e' : '#ef4444'})`, borderRadius: '2px' }} />
+            <span style={{ width: '40px', textAlign: 'right', color: val > 0 ? '#22c55e' : '#ef4444' }}>{(val * 100).toFixed(0)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Advanced Rule Visualization (Analyst Dashboard) ────────────────────────
+
+function RuleVisualization({ persona, theme }) {
+  if (persona !== 'analyst') return null
+
+  const colors = THEMES[theme]
+  const rules = [
+    { id: 1, name: 'irrigation_without_soil_increase', severity: 'RED', triggers: 12 },
+    { id: 2, name: 'health_divergence', severity: 'YELLOW', triggers: 3 },
+    { id: 3, name: 'sudden_deviation', severity: 'YELLOW', triggers: 8 },
+    { id: 4, name: 'ghost_sensor_triggered', severity: 'RED', triggers: 1 },
+  ]
+
+  return (
+    <div style={{
+      width: '100%',
+      background: colors.cardBg,
+      border: `1px solid ${colors.border}`,
+      padding: '14px 16px',
+      borderRadius: '2px',
+    }}>
+      <div style={{ fontSize: '0.7rem', color: colors.accent, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '12px' }}>
+        📋 ACTIVE DETECTION RULES
+      </div>
+      <div style={{ fontSize: '0.65rem', display: 'grid', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+        {rules.map(rule => (
+          <div key={rule.id} style={{
+            background: rule.severity === 'RED' ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)',
+            padding: '8px',
+            borderRadius: '2px',
+            borderLeft: `3px solid ${rule.severity === 'RED' ? '#ef4444' : '#f59e0b'}`,
+            display: 'flex',
+            justifyContent: 'space-between',
+          }}>
+            <span>{rule.name.replace(/_/g, ' ')}</span>
+            <span style={{ color: rule.severity === 'RED' ? '#ef4444' : '#f59e0b', fontWeight: 700 }}>{rule.triggers}⚡</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── StatusBar ────────────────────────────────────────────────────────────────
 
 function StatusBar({ anomaly, isAttackActive, isMuted, onMuteToggle }) {
@@ -2966,6 +3236,44 @@ export default function App() {
               </div>
             </div>
           </div>
+
+          {/* Analyst Dashboard Panels (based on analysisMode) */}
+          {persona === 'analyst' && analysisMode === 'config' && (
+            <>
+              <ThresholdTuningPanel persona={persona} theme={theme} thresholds={thresholds} setThresholds={setThresholds} />
+              <ConfigChangesLog persona={persona} theme={theme} configLog={auditLog} expandedId={null} setExpandedId={() => {}} />
+            </>
+          )}
+
+          {persona === 'analyst' && analysisMode === 'heatmap' && (
+            <>
+              <CorrelationHeatmap persona={persona} theme={theme} corr={corr} />
+              <BaselineStatistics persona={persona} theme={theme} baselineStats={baselineStats} />
+            </>
+          )}
+
+          {persona === 'analyst' && analysisMode === 'stats' && (
+            <>
+              <BaselineStatistics persona={persona} theme={theme} baselineStats={baselineStats} />
+              <RuleVisualization persona={persona} theme={theme} />
+            </>
+          )}
+
+          {persona === 'analyst' && analysisMode === 'attribution' && (
+            <CropYieldAttribution persona={persona} theme={theme} attributionData={attributionData} />
+          )}
+
+          {persona === 'analyst' && analysisMode === 'rules' && (
+            <RuleVisualization persona={persona} theme={theme} />
+          )}
+
+          {persona === 'analyst' && analysisMode === 'overview' && (
+            <>
+              <CorrelationHeatmap persona={persona} theme={theme} corr={corr} />
+              <BaselineStatistics persona={persona} theme={theme} baselineStats={baselineStats} />
+              <CropYieldAttribution persona={persona} theme={theme} attributionData={attributionData} />
+            </>
+          )}
 
           {/* action buttons */}
           <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
