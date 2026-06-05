@@ -313,13 +313,13 @@ function SensorMap({ persona, water, soil, health, isAttackActive }) {
 
   return (
     <div style={{
-      flex: 1,
+      width: '100%',
       background: '#0a0e14',
       border: '1px solid #1a2030',
       padding: '12px 14px',
       borderRadius: '2px',
       overflow: 'visible',
-      minHeight: '300px',
+      minHeight: '280px',
       display: 'flex',
       flexDirection: 'column',
       gap: '8px',
@@ -601,15 +601,17 @@ function StreamCard({ title, trust, metrics, hist, sparkKeys, sparkRanges, delay
 
   return (
     <div style={{
-      flex: 1, display: 'flex', flexDirection: 'column',
-      background: '#0c1018', border: `1px solid ${borderColor}`, boxShadow: glow,
-      padding: '10px 12px', transition: 'box-shadow 0.7s ease, border-color 0.7s ease',
-      overflow: 'auto', minWidth: '200px',
-      WebkitOverflowScrolling: 'touch',
-      '@media (maxWidth: 768px)': {
-        minWidth: '100%',
-        padding: '8px 10px',
-      },
+      flex: '1 1 calc(33.333% - 6px)',
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#0c1018',
+      border: `1px solid ${borderColor}`,
+      boxShadow: glow,
+      padding: '10px 12px',
+      transition: 'box-shadow 0.7s ease, border-color 0.7s ease',
+      overflow: 'visible',
+      minWidth: '250px',
+      maxWidth: '100%',
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1745,11 +1747,12 @@ export default function App() {
       <div style={{
         flex: 1,
         display: 'flex',
-        overflow: 'auto',
-        WebkitOverflowScrolling: 'touch',
+        overflow: 'visible',
         minHeight: 0,
         flexDirection: 'row',
         width: '100%',
+        gap: '8px',
+        padding: '8px',
         paddingBottom: '50px',
       }}>
 
@@ -1759,10 +1762,9 @@ export default function App() {
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
-          padding: '8px',
           overflow: 'visible',
-          minHeight: 'fit-content',
           width: '100%',
+          minWidth: 0,
         }}>
           {/* Persona-specific alert banner */}
           {(() => {
@@ -1779,7 +1781,7 @@ export default function App() {
                 border: `1px solid ${borderColor}`,
                 padding: '8px 12px',
                 borderRadius: '2px',
-                flexShrink: 0,
+                width: '100%',
               }}>
                 <div style={{ fontSize: '0.68rem', color: borderColor, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '2px' }}>
                   {alert.icon} {alert.title}
@@ -1796,13 +1798,13 @@ export default function App() {
 
           {/* stream cards */}
           <div className="stream-cards-container" style={{
-            flex: 5,
             display: 'flex',
             gap: '8px',
             overflow: 'visible',
-            minHeight: '280px',
             flexDirection: 'row',
             width: '100%',
+            flexWrap: 'wrap',
+            minHeight: 'auto',
           }}>
             <StreamCard
               title="WATER SENSOR ARRAY"
@@ -1879,7 +1881,7 @@ export default function App() {
 
           {/* correlation panel — analysts only */}
           {persona === 'analyst' && (
-            <div className="corr-matrix" style={{ flex: 4, overflow: 'visible', minHeight: '300px' }}>
+            <div className="corr-matrix" style={{ width: '100%', overflow: 'visible', minHeight: '320px' }}>
               <CorrelationPanel corr={corr} conf={conf} />
             </div>
           )}
