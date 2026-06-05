@@ -1687,11 +1687,8 @@ export default function App() {
       background: '#0a0c0f',
       fontFamily: "'Share Tech Mono', monospace",
       overflow: 'hidden',
-      paddingBottom: '32px',
-      width: '100vw',
-      '@media (maxWidth: 768px)': {
-        paddingBottom: '60px',
-      },
+      width: '100%',
+      maxWidth: '100vw',
     }}>
 
       {/* ── Header ── */}
@@ -1748,13 +1745,11 @@ export default function App() {
       <div style={{
         flex: 1,
         display: 'flex',
-        overflow: 'hidden',
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch',
         minHeight: 0,
         flexDirection: 'row',
-        '@media (maxWidth: 768px)': {
-          flexDirection: 'column',
-          overflow: 'visible',
-        },
+        width: '100%',
       }}>
 
         {/* left: cards + button + correlation */}
@@ -1764,9 +1759,9 @@ export default function App() {
           flexDirection: 'column',
           gap: '8px',
           padding: '8px',
-          overflow: 'auto',
-          minHeight: 0,
-          WebkitOverflowScrolling: 'touch',
+          overflow: 'visible',
+          minHeight: 'auto',
+          width: '100%',
         }}>
           {/* Persona-specific alert banner */}
           {(() => {
