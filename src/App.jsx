@@ -350,14 +350,15 @@ const DOMAIN_COLOR = { WATER: '#38bdf8', SOIL: '#f59e0b', HEALTH: '#22c55e' }
 
 // ─── Clock ────────────────────────────────────────────────────────────────────
 
-function Clock() {
+function Clock({ theme }) {
+  const colors = THEMES[theme]
   const [t, setT] = useState(new Date())
   useEffect(() => {
     const id = setInterval(() => setT(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
   return (
-    <span style={{ color: '#f59e0b', fontSize: '0.76rem', letterSpacing: '0.12em' }}>
+    <span style={{ color: colors.accent, fontSize: '0.76rem', letterSpacing: '0.12em', transition: 'color 0.3s ease' }}>
       {t.toISOString().replace('T', ' ').slice(0, 19)} UTC
     </span>
   )
@@ -395,29 +396,31 @@ function PersonaSelector({ persona, onChange }) {
 
 // ─── Location Selector ────────────────────────────────────────────────────────
 
-function LocationSelector({ location, onChange }) {
+function LocationSelector({ location, onChange, theme }) {
+  const colors = THEMES[theme]
   const locations = Object.keys(LIVE_LOCATIONS)
   return (
     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-      <span style={{ fontSize: '0.62rem', color: '#4b5563', letterSpacing: '0.1em' }}>📍 LOCATION:</span>
+      <span style={{ fontSize: '0.62rem', color: colors.dimText, letterSpacing: '0.1em' }}>📍 LOCATION:</span>
       <select
         value={location}
         onChange={e => onChange(e.target.value)}
         style={{
           padding: '4px 8px',
-          background: 'rgba(245,158,11,0.1)',
-          border: '1px solid #f59e0b',
-          color: '#f59e0b',
+          background: `${colors.accent}20`,
+          border: `1px solid ${colors.accent}`,
+          color: colors.accent,
           fontFamily: "'Share Tech Mono', monospace",
           fontSize: '0.62rem',
           letterSpacing: '0.08em',
           cursor: 'pointer',
           textTransform: 'uppercase',
           borderRadius: '2px',
+          transition: 'all 0.3s ease',
         }}
       >
         {locations.map(loc => (
-          <option key={loc} value={loc} style={{ background: '#0c1018', color: '#d1d5db' }}>
+          <option key={loc} value={loc} style={{ background: colors.cardBg, color: colors.text }}>
             {loc}
           </option>
         ))}
@@ -2458,33 +2461,25 @@ export default function App() {
 
   return (
     <div style={{
-      display: 'flex',
-      flexDirection: 'column',
       background: colors.bg,
       fontFamily: "'Share Tech Mono', monospace",
       width: '100%',
-      minHeight: '100vh',
       color: colors.text,
       transition: 'background 0.3s ease, color 0.3s ease',
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
-      <div style={{
-        flex: 1,
-        overflowY: 'visible',
-        overflowX: 'hidden',
-        WebkitOverflowScrolling: 'touch',
-        WebkitTouchCallout: 'none',
-        msOverflowStyle: '-ms-autohiding-scrollbar',
-      }}>
-
-      {/* ── Header ── */}
+      {/* ── Header (scrolls with content) ── */}
       <header style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '9px 12px', background: colors.headerBg,
-        borderBottom: `1px solid ${colors.border}`, flexShrink: 0,
+        borderBottom: `1px solid ${colors.border}`,
         flexWrap: 'wrap',
         gap: '12px',
         minHeight: 'auto',
         transition: 'all 0.3s ease',
+        flexShrink: 0,
       }}>
         <div style={{ minWidth: '200px', fontSize: '0.85rem' }}>
           <span style={{ color: colors.accent, fontSize: '0.85rem', letterSpacing: '0.2em', fontWeight: 700 }}>
@@ -2496,8 +2491,8 @@ export default function App() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <PersonaSelector persona={persona} onChange={setPersona} />
-          <LocationSelector location={selectedLocation} onChange={setSelectedLocation} />
-          <Clock />
+          <LocationSelector location={selectedLocation} onChange={setSelectedLocation} theme={theme} />
+          <Clock theme={theme} />
           <button
             onClick={handleReset}
             style={{
@@ -2529,19 +2524,21 @@ export default function App() {
         </div>
       </header>
 
+      {/* ── Scrollable Content Area ── */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+      }}>
+
       {/* ── Content row: main + ghost sidebar ── */}
       <div style={{
         display: 'flex',
-        overflow: 'visible',
-        minHeight: 'auto',
         flexDirection: 'row',
         width: '100%',
         gap: '8px',
         padding: '12px',
-        '@media (maxWidth: 768px)': {
-          flexDirection: 'column',
-          padding: '8px',
-        },
       }}>
 
         {/* left: cards + button + correlation */}
@@ -2550,7 +2547,6 @@ export default function App() {
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
-          overflow: 'visible',
           width: '100%',
           minWidth: 0,
         }}>
@@ -2818,6 +2814,7 @@ export default function App() {
           </div>
         )}
 
+      </div>
       </div>
       </div>
 
