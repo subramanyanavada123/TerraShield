@@ -331,9 +331,10 @@ function getAlertMessage(persona, confidence, flagged) {
 
 // ─── Sensor Map View (Agriculture Officers) ──────────────────────────────────
 
-function SensorMap({ persona, water, soil, health, isAttackActive }) {
+function SensorMap({ persona, water, soil, health, isAttackActive, theme }) {
   if (persona !== 'agriculture') return null
 
+  const colors = THEMES[theme]
   const wStatus = water.trustScore > 95 ? '#22c55e' : '#ef4444'
   const sStatus = soil.trustScore > 90 ? '#22c55e' : '#ef4444'
   const hStatus = health.trustScore > 90 ? '#22c55e' : '#ef4444'
@@ -341,34 +342,79 @@ function SensorMap({ persona, water, soil, health, isAttackActive }) {
   return (
     <div style={{
       width: '100%',
-      background: '#0a0e14',
-      border: '1px solid #1a2030',
-      padding: '12px 14px',
+      background: colors.cardBg,
+      border: `1px solid ${colors.border}`,
+      padding: '14px 16px',
       borderRadius: '2px',
       overflow: 'visible',
-      minHeight: '280px',
+      minHeight: 'auto',
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px',
+      gap: '12px',
+      transition: 'all 0.3s ease',
     }}>
-      <div style={{ fontSize: '0.68rem', color: '#d1d5db', letterSpacing: '0.1em', fontWeight: 700 }}>
-        🗺️ FIELD SENSOR MAP
+      <div style={{ fontSize: '0.7rem', color: colors.accent, letterSpacing: '0.1em', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+        🌾 FIELD STATUS
+        <TIPPSSBadge principle="Identity" theme={theme} />
       </div>
-      <div style={{ flex: 1, background: '#060810', border: '1px solid #0f1520', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: '250px' }}>
-        <svg viewBox="0 0 300 200" width="100%" height="100%" style={{ maxWidth: '100%', maxHeight: '100%' }}>
-          <rect x="10" y="10" width="280" height="180" fill="none" stroke="#1a2030" strokeWidth={1} />
-          <circle cx="80" cy="50" r="8" fill={wStatus} />
-          <text x="80" y="75" textAnchor="middle" fontSize="10" fill="#9ca3af">W</text>
-          <circle cx="150" cy="120" r="8" fill={sStatus} />
-          <text x="150" y="145" textAnchor="middle" fontSize="10" fill="#9ca3af">S</text>
-          <circle cx="220" cy="80" r="8" fill={hStatus} />
-          <text x="220" y="105" textAnchor="middle" fontSize="10" fill="#9ca3af">H</text>
-          {isAttackActive && <text x="150" y="185" textAnchor="middle" fontSize="11" fill="#ef4444">⚠ ALERT</text>}
-        </svg>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+        {/* Water Sensor */}
+        <div style={{
+          background: wStatus === '#22c55e' ? colors.successBg : colors.errorBg,
+          border: `2px solid ${wStatus}`,
+          borderRadius: '4px',
+          padding: '12px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>💧</div>
+          <div style={{ fontSize: '0.65rem', color: colors.text, fontWeight: 600, marginBottom: '4px' }}>WATER</div>
+          <div style={{ fontSize: '0.85rem', color: wStatus, fontWeight: 700 }}>{water.trustScore.toFixed(0)}%</div>
+          <div style={{ fontSize: '0.55rem', color: colors.dimText, marginTop: '4px' }}>pH: {water.ph.toFixed(1)}</div>
+        </div>
+
+        {/* Soil Sensor */}
+        <div style={{
+          background: sStatus === '#22c55e' ? colors.successBg : colors.errorBg,
+          border: `2px solid ${sStatus}`,
+          borderRadius: '4px',
+          padding: '12px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>🌱</div>
+          <div style={{ fontSize: '0.65rem', color: colors.text, fontWeight: 600, marginBottom: '4px' }}>SOIL</div>
+          <div style={{ fontSize: '0.85rem', color: sStatus, fontWeight: 700 }}>{soil.trustScore.toFixed(0)}%</div>
+          <div style={{ fontSize: '0.55rem', color: colors.dimText, marginTop: '4px' }}>Moisture: {soil.moisture.toFixed(0)}%</div>
+        </div>
+
+        {/* Health Sensor */}
+        <div style={{
+          background: hStatus === '#22c55e' ? colors.successBg : colors.errorBg,
+          border: `2px solid ${hStatus}`,
+          borderRadius: '4px',
+          padding: '12px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>❤️</div>
+          <div style={{ fontSize: '0.65rem', color: colors.text, fontWeight: 600, marginBottom: '4px' }}>HEALTH</div>
+          <div style={{ fontSize: '0.85rem', color: hStatus, fontWeight: 700 }}>{health.trustScore.toFixed(0)}%</div>
+          <div style={{ fontSize: '0.55rem', color: colors.dimText, marginTop: '4px' }}>Status: {health.trustScore > 90 ? 'Good' : 'Poor'}</div>
+        </div>
       </div>
-      <div style={{ fontSize: '0.56rem', color: '#4b5563' }}>
-        🟢 Normal | 🔴 Alert {isAttackActive && '| ⚠️ Attack Detected'}
-      </div>
+
+      {isAttackActive && (
+        <div style={{
+          background: colors.errorBg,
+          border: '2px solid #ef4444',
+          borderRadius: '4px',
+          padding: '10px',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 700, letterSpacing: '0.1em' }}>
+            ⚠️ CROSS-DOMAIN ANOMALY DETECTED
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -566,6 +612,106 @@ function IntroScreen({ onStart, theme }) {
         onMouseLeave={e => e.target.style.transform = 'scale(1)'}
       >
         ▶ ENTER SYSTEM
+      </button>
+    </div>
+  )
+}
+
+// ─── Resolve Actions ────────────────────────────────────────────────────────
+
+function ResolveActions({ conf, flagged, theme, onAction }) {
+  const colors = THEMES[theme]
+  if (conf < 30) return null
+
+  const severity = conf > 70 ? 'critical' : 'warning'
+
+  return (
+    <div style={{
+      width: '100%',
+      background: severity === 'critical' ? colors.errorBg : colors.successBg,
+      border: `2px solid ${severity === 'critical' ? '#ef4444' : '#f59e0b'}`,
+      borderRadius: '4px',
+      padding: '14px 16px',
+    }}>
+      <div style={{
+        fontSize: '0.7rem',
+        color: severity === 'critical' ? '#dc2626' : '#d97706',
+        letterSpacing: '0.1em',
+        fontWeight: 700,
+        marginBottom: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+      }}>
+        {severity === 'critical' ? '🚨 CRITICAL ACTION REQUIRED' : '⚠️ RECOMMENDED ACTIONS'}
+        <TIPPSSBadge principle="Protection" theme={theme} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '10px' }}>
+        <button
+          onClick={() => onAction('isolate')}
+          style={{
+            padding: '8px 12px',
+            background: severity === 'critical' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)',
+            border: `1px solid ${severity === 'critical' ? '#ef4444' : '#f59e0b'}`,
+            color: severity === 'critical' ? '#dc2626' : '#d97706',
+            fontFamily: "'Share Tech Mono', monospace",
+            fontSize: '0.6rem',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            cursor: 'pointer',
+            borderRadius: '2px',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={e => e.target.style.opacity = '0.8'}
+          onMouseLeave={e => e.target.style.opacity = '1'}
+        >
+          🔒 ISOLATE SENSOR
+        </button>
+
+        <button
+          onClick={() => onAction('backup')}
+          style={{
+            padding: '8px 12px',
+            background: severity === 'critical' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)',
+            border: `1px solid ${severity === 'critical' ? '#ef4444' : '#f59e0b'}`,
+            color: severity === 'critical' ? '#dc2626' : '#d97706',
+            fontFamily: "'Share Tech Mono', monospace",
+            fontSize: '0.6rem',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            cursor: 'pointer',
+            borderRadius: '2px',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={e => e.target.style.opacity = '0.8'}
+          onMouseLeave={e => e.target.style.opacity = '1'}
+        >
+          🔄 ACTIVATE BACKUP
+        </button>
+      </div>
+
+      <button
+        onClick={() => onAction('notify')}
+        style={{
+          width: '100%',
+          padding: '10px 12px',
+          background: severity === 'critical' ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)',
+          border: `2px solid ${severity === 'critical' ? '#ef4444' : '#f59e0b'}`,
+          color: severity === 'critical' ? '#dc2626' : '#d97706',
+          fontFamily: "'Share Tech Mono', monospace",
+          fontSize: '0.65rem',
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          cursor: 'pointer',
+          borderRadius: '2px',
+          transition: 'all 0.2s ease',
+          textTransform: 'uppercase',
+        }}
+        onMouseEnter={e => e.target.style.opacity = '0.9'}
+        onMouseLeave={e => e.target.style.opacity = '1'}
+      >
+        📢 NOTIFY ADMINISTRATOR
       </button>
     </div>
   )
@@ -789,11 +935,11 @@ function StreamCard({ title, trust, metrics, hist, sparkKeys, sparkRanges, delay
       flex: '1 1 calc(33.333% - 6px)',
       display: 'flex',
       flexDirection: 'column',
-      background: '#0c1018',
+      background: localStorage.getItem('terrashield-theme') === 'light' ? '#f9fafb' : '#0c1018',
       border: `1px solid ${borderColor}`,
       boxShadow: glow,
       padding: '10px 12px',
-      transition: 'box-shadow 0.7s ease, border-color 0.7s ease',
+      transition: 'box-shadow 0.7s ease, border-color 0.7s ease, background 0.3s ease',
       overflow: 'visible',
       minWidth: '250px',
       maxWidth: '100%',
@@ -1994,8 +2140,20 @@ export default function App() {
             )
           })()}
 
+          {/* Resolve Actions - show when anomaly detected */}
+          <ResolveActions
+            conf={conf}
+            flagged={flaggedDomains}
+            theme={theme}
+            onAction={(action) => {
+              if (action === 'notify') alert('🔔 Administrator notified of sensor compromise')
+              if (action === 'isolate') alert('🔒 Sensor isolated from network')
+              if (action === 'backup') alert('🔄 Backup sensors activated')
+            }}
+          />
+
           {/* ProvenanceQuery panel (analyst only) */}
-          <ProvenanceQuery persona={persona} onQuery={(days) => console.log('Query last', days, 'days')} />
+          <ProvenanceQuery persona={persona} onQuery={(days) => console.log('Query last', days, 'days')} theme={theme} />
 
           {/* stream cards */}
           <div className="stream-cards-container" style={{
@@ -2094,7 +2252,7 @@ export default function App() {
 
           {/* agriculture view: map + simplified metrics */}
           {persona === 'agriculture' && (
-            <SensorMap persona={persona} water={water} soil={soil} health={health} isAttackActive={isAttackActive} />
+            <SensorMap persona={persona} water={water} soil={soil} health={health} isAttackActive={isAttackActive} theme={theme} />
           )}
 
           {/* analyst controls */}
