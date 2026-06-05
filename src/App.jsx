@@ -318,8 +318,8 @@ function SensorMap({ persona, water, soil, health, isAttackActive }) {
       border: '1px solid #1a2030',
       padding: '12px 14px',
       borderRadius: '2px',
-      overflow: 'hidden',
-      minHeight: 0,
+      overflow: 'visible',
+      minHeight: '300px',
       display: 'flex',
       flexDirection: 'column',
       gap: '8px',
@@ -327,7 +327,7 @@ function SensorMap({ persona, water, soil, health, isAttackActive }) {
       <div style={{ fontSize: '0.68rem', color: '#d1d5db', letterSpacing: '0.1em', fontWeight: 700 }}>
         🗺️ FIELD SENSOR MAP
       </div>
-      <div style={{ flex: 1, background: '#060810', border: '1px solid #0f1520', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+      <div style={{ flex: 1, background: '#060810', border: '1px solid #0f1520', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: '250px' }}>
         <svg viewBox="0 0 300 200" width="100%" height="100%" style={{ maxWidth: '100%', maxHeight: '100%' }}>
           <rect x="10" y="10" width="280" height="180" fill="none" stroke="#1a2030" strokeWidth={1} />
           <circle cx="80" cy="50" r="8" fill={wStatus} />
@@ -1750,6 +1750,7 @@ export default function App() {
         minHeight: 0,
         flexDirection: 'row',
         width: '100%',
+        paddingBottom: '50px',
       }}>
 
         {/* left: cards + button + correlation */}
@@ -1760,7 +1761,7 @@ export default function App() {
           gap: '8px',
           padding: '8px',
           overflow: 'visible',
-          minHeight: 'auto',
+          minHeight: 'fit-content',
           width: '100%',
         }}>
           {/* Persona-specific alert banner */}
@@ -1798,8 +1799,8 @@ export default function App() {
             flex: 5,
             display: 'flex',
             gap: '8px',
-            overflow: 'hidden',
-            minHeight: 0,
+            overflow: 'visible',
+            minHeight: '280px',
             flexDirection: 'row',
             width: '100%',
           }}>
@@ -1878,7 +1879,7 @@ export default function App() {
 
           {/* correlation panel — analysts only */}
           {persona === 'analyst' && (
-            <div className="corr-matrix" style={{ flex: 4, overflow: 'hidden', minHeight: 0 }}>
+            <div className="corr-matrix" style={{ flex: 4, overflow: 'visible', minHeight: '300px' }}>
               <CorrelationPanel corr={corr} conf={conf} />
             </div>
           )}
