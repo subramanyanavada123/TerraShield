@@ -72,6 +72,14 @@ if (typeof document !== 'undefined') {
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
+const LIVE_LOCATIONS = {
+  Madikeri: { lat: 12.3181, lon: 75.6410, region: 'Central Coorg' },
+  Somwarpet: { lat: 12.3667, lon: 75.5667, region: 'North Coorg' },
+  Virajpet: { lat: 12.1833, lon: 75.8167, region: 'East Coorg' },
+  Ponnampet: { lat: 12.0167, lon: 75.9000, region: 'South Coorg' },
+  Kushalanagar: { lat: 12.2667, lon: 75.7333, region: 'West Coorg' },
+}
+
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 const jitter = (center, half) => center + (Math.random() - 0.5) * half * 2
 
@@ -1017,7 +1025,7 @@ function TypewriterTitle({ text, delayMs = 0 }) {
   )
 }
 
-function StreamCard({ title, trust, metrics, hist, sparkKeys, sparkRanges, delayMs = 0 }) {
+function StreamCard({ title, subtitle, trust, metrics, hist, sparkKeys, sparkRanges, delayMs = 0 }) {
   const borderColor = trust < 50 ? '#ef4444' : trust < 80 ? '#f59e0b' : '#1a2030'
   const glow = trust < 50
     ? '0 0 22px rgba(239,68,68,0.45), 0 0 7px rgba(239,68,68,0.3)'
@@ -1041,14 +1049,21 @@ function StreamCard({ title, trust, metrics, hist, sparkKeys, sparkRanges, delay
       maxWidth: '100%',
     }}>
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: '10px', paddingBottom: '8px', borderBottom: `1px solid ${THEMES[localStorage.getItem('theme') || 'dark'].border}`, flexShrink: 0,
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+        marginBottom: '8px', paddingBottom: '8px', borderBottom: `1px solid ${THEMES[localStorage.getItem('theme') || 'dark'].border}`, flexShrink: 0,
         gap: '8px',
       }}>
-        <span style={{ fontSize: '0.68rem', color: '#f59e0b', letterSpacing: '0.18em', fontWeight: 700, minHeight: '1.2em' }}>
-          <TypewriterTitle text={title} delayMs={delayMs} />
-        </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ flex: 1 }}>
+          <span style={{ fontSize: '0.68rem', color: '#f59e0b', letterSpacing: '0.18em', fontWeight: 700, minHeight: '1.2em' }}>
+            <TypewriterTitle text={title} delayMs={delayMs} />
+          </span>
+          {subtitle && (
+            <div style={{ fontSize: '0.55rem', color: '#6b7280', letterSpacing: '0.08em', marginTop: '2px' }}>
+              📍 {subtitle}
+            </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: '0.6rem', color: trustColor, letterSpacing: '0.1em' }}>
             🤝 {trust.toFixed(1)}%
           </span>
@@ -1931,11 +1946,12 @@ export default function App() {
   const [attackTimestamp, setAttackTimestamp] = useState(null)
   const [provenanceQuery, setProvenanceQuery] = useState(null)
   const [isMuted, setIsMuted] = useState(false)
+  const [currentLocation, setCurrentLocation] = useState('Madikeri')
 
-  // sensor readings
-  const [water,  setWater]  = useState(() => genWater(false))
-  const [soil,   setSoil]   = useState(() => genSoil(false))
-  const [health, setHealth] = useState(() => genHealth(false, 0))
+  // sensor readings with location data
+  const [water,  setWater]  = useState(() => ({ ...genWater(false), location: 'Madikeri', region: 'Central Coorg' }))
+  const [soil,   setSoil]   = useState(() => ({ ...genSoil(false), location: 'Somwarpet', region: 'North Coorg' }))
+  const [health, setHealth] = useState(() => ({ ...genHealth(false, 0), location: 'Virajpet', region: 'East Coorg' }))
 
   // sparkline history
   const [waterHist,  setWaterHist]  = useState(INIT_WATER)
@@ -2269,13 +2285,15 @@ export default function App() {
             minHeight: 'auto',
           }}>
             <StreamCard
-              title="WATER SENSOR ARRAY"
+              title={`💧 WATER - ${water.location}`}
+              subtitle={water.region}
               trust={water.trustScore}
               hist={waterHist}
               sparkKeys={['ph', 'turbidity', 'flowRate']}
               sparkRanges={[[2, 10], [0, 32], [0, 20]]}
               delayMs={0}
               metrics={<>
+                <MetricRow label="Location" value={water.location} unit="" precision={0} />
                 <MetricRow label="pH Level"    value={water.ph}         unit="pH"    precision={2} />
                 <MetricRow label="Turbidity"   value={water.turbidity}  unit="NTU"   precision={2} />
                 <MetricRow label="Flow Rate"   value={water.flowRate}   unit="L/min" precision={1} />
@@ -2283,13 +2301,15 @@ export default function App() {
               </>}
             />
             <StreamCard
-              title="SOIL SENSOR ARRAY"
+              title={`🌱 SOIL - ${soil.location}`}
+              subtitle={soil.region}
               trust={soil.trustScore}
               hist={soilHist}
               sparkKeys={['moisture', 'nitrogen', 'salinity']}
               sparkRanges={[[25, 90], [120, 200], [0.5, 5.0]]}
               delayMs={400}
               metrics={<>
+                <MetricRow label="Location" value={soil.location} unit="" precision={0} />
                 <MetricRow label="Moisture"    value={soil.moisture}   unit="%"    precision={1} />
                 <MetricRow label="Nitrogen"    value={soil.nitrogen}   unit="ppm"  precision={0} />
                 <MetricRow label="Salinity"    value={soil.salinity}   unit="dS/m" precision={2} />
@@ -2297,13 +2317,15 @@ export default function App() {
               </>}
             />
             <StreamCard
-              title="COMMUNITY HEALTH NODES"
+              title={`❤️ HEALTH - ${health.location}`}
+              subtitle={health.region}
               trust={health.trustScore}
               hist={healthHist}
               sparkKeys={['malnutrition', 'diseaseIncidence', 'clinicVisits']}
               sparkRanges={[[0, 25], [0, 18], [30, 150]]}
               delayMs={800}
               metrics={<>
+                <MetricRow label="Location" value={health.location} unit="" precision={0} />
                 <MetricRow label="Malnutrition Idx"  value={health.malnutrition}     unit="%"     precision={1} />
                 <MetricRow label="Disease Incidence" value={health.diseaseIncidence}  unit="/1000" precision={1} />
                 <MetricRow label="Clinic Visits"     value={health.clinicVisits}      unit="/week" precision={0} />
