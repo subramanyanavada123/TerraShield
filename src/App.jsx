@@ -3002,12 +3002,16 @@ export default function App() {
     <div style={{
       background: colors.bg,
       fontFamily: "'Share Tech Mono', monospace",
-      width: '100%',
+      width: '100vw',
+      height: '100vh',
       color: colors.text,
       transition: 'background 0.3s ease, color 0.3s ease',
-      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
+      overflow: 'hidden',
+      position: 'fixed',
+      top: 0,
+      left: 0,
     }}>
       {/* ── Header (scrolls with content) ── */}
       <header style={{
@@ -3066,9 +3070,11 @@ export default function App() {
       {/* ── Scrollable Content Area ── */}
       <div style={{
         flex: 1,
-        overflowY: 'auto',
+        overflowY: 'scroll',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
+        height: 'calc(100vh - 40px)',
+        position: 'relative',
       }}>
 
       {/* ── Analysis Mode Selector (Analyst Only) ── */}
