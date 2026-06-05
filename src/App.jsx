@@ -321,6 +321,39 @@ function PersonaSelector({ persona, onChange }) {
   )
 }
 
+// ─── Location Selector ────────────────────────────────────────────────────────
+
+function LocationSelector({ location, onChange }) {
+  const locations = Object.keys(LIVE_LOCATIONS)
+  return (
+    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <span style={{ fontSize: '0.62rem', color: '#4b5563', letterSpacing: '0.1em' }}>📍 LOCATION:</span>
+      <select
+        value={location}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          padding: '4px 8px',
+          background: 'rgba(245,158,11,0.1)',
+          border: '1px solid #f59e0b',
+          color: '#f59e0b',
+          fontFamily: "'Share Tech Mono', monospace",
+          fontSize: '0.62rem',
+          letterSpacing: '0.08em',
+          cursor: 'pointer',
+          textTransform: 'uppercase',
+          borderRadius: '2px',
+        }}
+      >
+        {locations.map(loc => (
+          <option key={loc} value={loc} style={{ background: '#0c1018', color: '#d1d5db' }}>
+            {loc}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
 // ─── Persona-specific alert messages ──────────────────────────────────────────
 
 function getAlertMessage(persona, confidence, flagged) {
@@ -825,11 +858,35 @@ function ResolveActions({ conf, flagged, theme, onAction }) {
           borderRadius: '2px',
           transition: 'all 0.2s ease',
           textTransform: 'uppercase',
+          marginBottom: '8px',
         }}
         onMouseEnter={e => e.target.style.opacity = '0.9'}
         onMouseLeave={e => e.target.style.opacity = '1'}
       >
         📢 NOTIFY ADMINISTRATOR
+      </button>
+
+      <button
+        onClick={() => onAction('false-alert')}
+        style={{
+          width: '100%',
+          padding: '8px 12px',
+          background: 'rgba(16,185,129,0.2)',
+          border: '1px solid #10b981',
+          color: '#10b981',
+          fontFamily: "'Share Tech Mono', monospace",
+          fontSize: '0.6rem',
+          fontWeight: 600,
+          letterSpacing: '0.08em',
+          cursor: 'pointer',
+          borderRadius: '2px',
+          transition: 'all 0.2s ease',
+          textTransform: 'uppercase',
+        }}
+        onMouseEnter={e => e.target.style.opacity = '0.8'}
+        onMouseLeave={e => e.target.style.opacity = '1'}
+      >
+        ✓ MARK AS FALSE ALERT
       </button>
     </div>
   )
@@ -1968,12 +2025,15 @@ export default function App() {
   const [attackTimestamp, setAttackTimestamp] = useState(null)
   const [provenanceQuery, setProvenanceQuery] = useState(null)
   const [isMuted, setIsMuted] = useState(false)
-  const [currentLocation, setCurrentLocation] = useState('Madikeri')
+  const [selectedLocation, setSelectedLocation] = useState('Madikeri')
+  const [falseAlerts, setFalseAlerts] = useState(0)
+  const [totalAlerts, setTotalAlerts] = useState(0)
 
-  // sensor readings with location data
-  const [water,  setWater]  = useState(() => ({ ...genWater(false), location: 'Madikeri', sensitivity: 'High-altitude coffee watershed', state: 'Karnataka' }))
-  const [soil,   setSoil]   = useState(() => ({ ...genSoil(false), location: 'Somwarpet', sensitivity: 'Endangered spice plantation zone', state: 'Karnataka' }))
-  const [health, setHealth] = useState(() => ({ ...genHealth(false, 0), location: 'Virajpet', sensitivity: 'Critical water source area', state: 'Karnataka' }))
+  // sensor readings - all from selected location
+  const locationData = LIVE_LOCATIONS[selectedLocation]
+  const [water,  setWater]  = useState(() => ({ ...genWater(false), location: selectedLocation, sensitivity: locationData.sensitivity, state: locationData.state }))
+  const [soil,   setSoil]   = useState(() => ({ ...genSoil(false), location: selectedLocation, sensitivity: locationData.sensitivity, state: locationData.state }))
+  const [health, setHealth] = useState(() => ({ ...genHealth(false, 0), location: selectedLocation, sensitivity: locationData.sensitivity, state: locationData.state }))
 
   // sparkline history
   const [waterHist,  setWaterHist]  = useState(INIT_WATER)
@@ -2019,10 +2079,11 @@ export default function App() {
   // water tick — 2s
   useEffect(() => {
     const id = setInterval(() => {
-      const d = { ...genWater(isAttackActive), location: 'Madikeri', sensitivity: 'High-altitude coffee watershed', state: 'Karnataka' }
+      const locData = LIVE_LOCATIONS[selectedLocation]
+      const d = { ...genWater(isAttackActive), location: selectedLocation, sensitivity: locData.sensitivity, state: locData.state }
       // Adjust with live weather if available
-      if (liveWeatherData.Madikeri) {
-        const w = liveWeatherData.Madikeri
+      if (liveWeatherData[selectedLocation]) {
+        const w = liveWeatherData[selectedLocation]
         d.ph = clamp(d.ph + (w.humidity - 70) * 0.02, 4, 9)
         d.turbidity = clamp(d.turbidity + w.rainfall * 2, 0, 30)
       }
@@ -2030,15 +2091,16 @@ export default function App() {
       setWaterHist(h => pushHistory(h, d))
     }, 2000)
     return () => clearInterval(id)
-  }, [isAttackActive, liveWeatherData])
+  }, [isAttackActive, liveWeatherData, selectedLocation])
 
   // soil tick — 2s
   useEffect(() => {
     const id = setInterval(() => {
-      const d = { ...genSoil(isAttackActive), location: 'Somwarpet', sensitivity: 'Endangered spice plantation zone', state: 'Karnataka' }
+      const locData = LIVE_LOCATIONS[selectedLocation]
+      const d = { ...genSoil(isAttackActive), location: selectedLocation, sensitivity: locData.sensitivity, state: locData.state }
       // Adjust with live weather if available
-      if (liveWeatherData.Somwarpet) {
-        const w = liveWeatherData.Somwarpet
+      if (liveWeatherData[selectedLocation]) {
+        const w = liveWeatherData[selectedLocation]
         d.moisture = clamp(d.moisture + w.humidity * 0.3, 25, 90)
         d.salinity = clamp(d.salinity + w.rainfall * 0.05, 0.5, 4)
       }
@@ -2046,16 +2108,17 @@ export default function App() {
       setSoilHist(h => pushHistory(h, d))
     }, 2000)
     return () => clearInterval(id)
-  }, [isAttackActive, liveWeatherData])
+  }, [isAttackActive, liveWeatherData, selectedLocation])
 
   // health tick — 3s
   useEffect(() => {
     const id = setInterval(() => {
       const elapsed = attackTimestamp ? Date.now() - Number(attackTimestamp) : 0
-      const d = { ...genHealth(isAttackActive, elapsed), location: 'Virajpet', sensitivity: 'Critical water source area', state: 'Karnataka' }
+      const locData = LIVE_LOCATIONS[selectedLocation]
+      const d = { ...genHealth(isAttackActive, elapsed), location: selectedLocation, sensitivity: locData.sensitivity, state: locData.state }
       // Adjust with live weather if available
-      if (liveWeatherData.Virajpet) {
-        const w = liveWeatherData.Virajpet
+      if (liveWeatherData[selectedLocation]) {
+        const w = liveWeatherData[selectedLocation]
         d.diseaseIncidence = clamp(d.diseaseIncidence - w.humidity * 0.05, 0, 15)
         d.malnutrition = clamp(d.malnutrition - w.rainfall * 0.1, 5, 20)
       }
@@ -2063,7 +2126,7 @@ export default function App() {
       setHealthHist(h => pushHistory(h, d))
     }, 3000)
     return () => clearInterval(id)
-  }, [isAttackActive, attackTimestamp, liveWeatherData])
+  }, [isAttackActive, attackTimestamp, liveWeatherData, selectedLocation])
 
   // 80ms loop: correlation lerp + ghost sensor triggers
   useEffect(() => {
@@ -2232,6 +2295,7 @@ export default function App() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <PersonaSelector persona={persona} onChange={setPersona} />
+          <LocationSelector location={selectedLocation} onChange={setSelectedLocation} />
           <Clock />
           <button
             onClick={handleReset}
@@ -2323,6 +2387,11 @@ export default function App() {
               if (action === 'notify') alert('🔔 Administrator notified of sensor compromise')
               if (action === 'isolate') alert('🔒 Sensor isolated from network')
               if (action === 'backup') alert('🔄 Backup sensors activated')
+              if (action === 'false-alert') {
+                setFalseAlerts(f => f + 1)
+                setTotalAlerts(t => t + 1)
+                alert(`✅ Marked as false alert\n\nFalse Positives: ${falseAlerts + 1}/${totalAlerts + 1}`)
+              }
             }}
           />
 
