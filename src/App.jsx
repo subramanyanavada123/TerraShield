@@ -2816,7 +2816,6 @@ export default function App() {
 
       </div>
       </div>
-      </div>
 
       {/* ── Status Bar (fixed to bottom) ── */}
       <StatusBar 
