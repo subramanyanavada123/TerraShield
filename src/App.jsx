@@ -80,6 +80,28 @@ const LIVE_LOCATIONS = {
   Kushalanagar: { lat: 12.2667, lon: 75.7333, sensitivity: 'Agrarian buffer zone', state: 'Karnataka' },
 }
 
+// Fetch real weather data from Open-Meteo (free, no API key needed)
+const fetchLiveWeatherData = async (location) => {
+  try {
+    const { lat, lon } = LIVE_LOCATIONS[location]
+    const response = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code&timezone=Asia/Kolkata`
+    )
+    const data = await response.json()
+    const current = data.current
+
+    return {
+      temp: current.temperature_2m || 25,
+      humidity: current.relative_humidity_2m || 70,
+      rainfall: current.precipitation || 0,
+      weatherCode: current.weather_code || 0,
+    }
+  } catch (err) {
+    console.log(`⚠️ API fetch failed for ${location}, using simulation`)
+    return null // Fall back to simulation
+  }
+}
+
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 const jitter = (center, half) => center + (Math.random() - 0.5) * half * 2
 
@@ -653,7 +675,7 @@ function IntroScreen({ onStart, theme }) {
           marginBottom: '24px',
         }}>
           <p style={{ fontSize: '0.85rem', color: colors.dimText, margin: 0, lineHeight: 1.8 }}>
-            <strong style={{ color: colors.text }}>Live Stats:</strong> 5 countries monitored | 99.8% uptime | 127 attacks detected | 0.2% false positives
+            <strong style={{ color: colors.text }}>Live Stats:</strong> 5 geographically sensitive areas in Karnataka | 99.8% uptime | 127 attacks detected | 0.2% false positives
           </p>
         </div>
 
@@ -909,7 +931,7 @@ function ProvenanceQuery({ persona, onQuery, theme }) {
 // ─── MetricRow ─────────────────────────────────────────────────────────────────
 
 function MetricRow({ label, value, unit, precision = 1 }) {
-  const display = precision === 0 ? String(Math.round(value)) : value.toFixed(precision)
+  const display = typeof value === 'string' ? value : precision === 0 ? String(Math.round(value)) : value.toFixed(precision)
   return (
     <div style={{
       display: 'flex',
@@ -1978,37 +2000,70 @@ export default function App() {
   // provenance trace trigger
   const provenanceTrigRef = useRef(false)
   const [showProvenance, setShowProvenance] = useState(false)
+  const [liveWeatherData, setLiveWeatherData] = useState({})
+
+  // Fetch live weather on mount
+  useEffect(() => {
+    const fetchWeather = async () => {
+      const weather = {}
+      for (const loc of Object.keys(LIVE_LOCATIONS)) {
+        const data = await fetchLiveWeatherData(loc)
+        if (data) weather[loc] = data
+      }
+      setLiveWeatherData(weather)
+      console.log('✅ Live weather data loaded:', weather)
+    }
+    fetchWeather()
+  }, [])
 
   // water tick — 2s
   useEffect(() => {
     const id = setInterval(() => {
-      const d = genWater(isAttackActive)
+      const d = { ...genWater(isAttackActive), location: 'Madikeri', sensitivity: 'High-altitude coffee watershed', state: 'Karnataka' }
+      // Adjust with live weather if available
+      if (liveWeatherData.Madikeri) {
+        const w = liveWeatherData.Madikeri
+        d.ph = clamp(d.ph + (w.humidity - 70) * 0.02, 4, 9)
+        d.turbidity = clamp(d.turbidity + w.rainfall * 2, 0, 30)
+      }
       setWater(d)
       setWaterHist(h => pushHistory(h, d))
     }, 2000)
     return () => clearInterval(id)
-  }, [isAttackActive])
+  }, [isAttackActive, liveWeatherData])
 
   // soil tick — 2s
   useEffect(() => {
     const id = setInterval(() => {
-      const d = genSoil(isAttackActive)
+      const d = { ...genSoil(isAttackActive), location: 'Somwarpet', sensitivity: 'Endangered spice plantation zone', state: 'Karnataka' }
+      // Adjust with live weather if available
+      if (liveWeatherData.Somwarpet) {
+        const w = liveWeatherData.Somwarpet
+        d.moisture = clamp(d.moisture + w.humidity * 0.3, 25, 90)
+        d.salinity = clamp(d.salinity + w.rainfall * 0.05, 0.5, 4)
+      }
       setSoil(d)
       setSoilHist(h => pushHistory(h, d))
     }, 2000)
     return () => clearInterval(id)
-  }, [isAttackActive])
+  }, [isAttackActive, liveWeatherData])
 
   // health tick — 3s
   useEffect(() => {
     const id = setInterval(() => {
       const elapsed = attackTimestamp ? Date.now() - Number(attackTimestamp) : 0
-      const d = genHealth(isAttackActive, elapsed)
+      const d = { ...genHealth(isAttackActive, elapsed), location: 'Virajpet', sensitivity: 'Critical water source area', state: 'Karnataka' }
+      // Adjust with live weather if available
+      if (liveWeatherData.Virajpet) {
+        const w = liveWeatherData.Virajpet
+        d.diseaseIncidence = clamp(d.diseaseIncidence - w.humidity * 0.05, 0, 15)
+        d.malnutrition = clamp(d.malnutrition - w.rainfall * 0.1, 5, 20)
+      }
       setHealth(d)
       setHealthHist(h => pushHistory(h, d))
     }, 3000)
     return () => clearInterval(id)
-  }, [isAttackActive, attackTimestamp])
+  }, [isAttackActive, attackTimestamp, liveWeatherData])
 
   // 80ms loop: correlation lerp + ghost sensor triggers
   useEffect(() => {
