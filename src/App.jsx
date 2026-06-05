@@ -1,6 +1,29 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { LineChart, Line, ResponsiveContainer } from 'recharts'
 
+// ─── Theme constants ──────────────────────────────────────────────────────────
+
+const THEMES = {
+  dark: {
+    bg: '#0a0c0f',
+    headerBg: '#0c1018',
+    cardBg: '#0c1018',
+    border: '#1a2030',
+    text: '#d1d5db',
+    dimText: '#4b5563',
+    accent: '#f59e0b',
+  },
+  light: {
+    bg: '#f8f9fa',
+    headerBg: '#ffffff',
+    cardBg: '#ffffff',
+    border: '#e5e7eb',
+    text: '#1f2937',
+    dimText: '#6b7280',
+    accent: '#d97706',
+  },
+}
+
 // ─── Global mobile styles ──────────────────────────────────────────────────────
 
 if (typeof document !== 'undefined') {
@@ -417,9 +440,152 @@ function GhostControls({ persona, onDeploy, onRevoke }) {
   )
 }
 
+// ─── Theme Toggle ─────────────────────────────────────────────────────────────
+
+function ThemeToggle({ theme, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        padding: '6px 10px',
+        background: 'transparent',
+        border: `1px solid ${theme === 'dark' ? '#f59e0b' : '#d97706'}`,
+        color: theme === 'dark' ? '#f59e0b' : '#d97706',
+        fontFamily: "'Share Tech Mono', monospace",
+        fontSize: '0.6rem',
+        letterSpacing: '0.1em',
+        cursor: 'pointer',
+        borderRadius: '2px',
+        transition: 'all 0.25s ease',
+      }}
+      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+    >
+      {theme === 'dark' ? '☀️ LIGHT' : '🌙 DARK'}
+    </button>
+  )
+}
+
+// ─── Intro Screen ─────────────────────────────────────────────────────────────
+
+function IntroScreen({ onStart, theme }) {
+  const colors = THEMES[theme]
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: colors.bg,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '24px',
+      zIndex: 1000,
+      padding: '20px',
+    }}>
+      <div style={{ textAlign: 'center', maxWidth: '600px' }}>
+        <h1 style={{ fontSize: '2.8rem', color: colors.accent, letterSpacing: '0.2em', marginBottom: '12px' }}>
+          TERRASHIELD
+        </h1>
+        <p style={{ fontSize: '0.95rem', color: colors.dimText, letterSpacing: '0.05em', marginBottom: '20px' }}>
+          IEEE SA Cybersecurity Hackathon 2026
+        </p>
+
+        <h2 style={{ fontSize: '1.4rem', color: colors.text, letterSpacing: '0.08em', marginBottom: '16px', fontWeight: 600 }}>
+          🔍 THE PROBLEM
+        </h2>
+        <p style={{ fontSize: '0.9rem', color: colors.dimText, lineHeight: 1.8, marginBottom: '24px' }}>
+          Traditional IoT monitoring watches individual sensors. An attacker who compromises <strong>multiple sensors simultaneously</strong> across different domains (water, soil, health) remains invisible. Cross-domain attack cascades go undetected.
+        </p>
+
+        <h2 style={{ fontSize: '1.4rem', color: colors.text, letterSpacing: '0.08em', marginBottom: '16px', fontWeight: 600 }}>
+          ⚡ THE SOLUTION
+        </h2>
+        <p style={{ fontSize: '0.9rem', color: colors.dimText, lineHeight: 1.8, marginBottom: '24px' }}>
+          Real-time <strong>cross-domain correlation</strong> + <strong>forensic provenance tracing</strong>. Detect what single sensors miss. Prove what happened, when, and why.
+        </p>
+
+        <h2 style={{ fontSize: '1.4rem', color: colors.text, letterSpacing: '0.08em', marginBottom: '16px', fontWeight: 600 }}>
+          🎯 BUILT ON TIPPSS FRAMEWORK
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          {['🤝 Trust', '🔐 Identity', '🔒 Privacy', '🛡️ Protection', '⚠️ Safety', '🔍 Security'].map(label => (
+            <div key={label} style={{
+              padding: '8px',
+              background: colors.cardBg,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '2px',
+              fontSize: '0.75rem',
+              color: colors.text,
+              letterSpacing: '0.06em',
+            }}>
+              {label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <button
+        onClick={onStart}
+        style={{
+          padding: '12px 32px',
+          background: colors.accent,
+          border: 'none',
+          color: colors.bg,
+          fontFamily: "'Share Tech Mono', monospace",
+          fontSize: '0.8rem',
+          fontWeight: 700,
+          letterSpacing: '0.12em',
+          cursor: 'pointer',
+          borderRadius: '2px',
+          transition: 'all 0.3s ease',
+          textTransform: 'uppercase',
+        }}
+        onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
+        onMouseLeave={e => e.target.style.transform = 'scale(1)'}
+      >
+        ▶ START DEMO
+      </button>
+    </div>
+  )
+}
+
+// ─── TIPPSS Badge ────────────────────────────────────────────────────────────
+
+function TIPPSSBadge({ principle, theme }) {
+  const colors = THEMES[theme]
+  const badges = {
+    Trust: { icon: '🤝', color: '#8b5cf6' },
+    Identity: { icon: '🔐', color: '#06b6d4' },
+    Privacy: { icon: '🔒', color: '#10b981' },
+    Protection: { icon: '🛡️', color: '#f59e0b' },
+    Safety: { icon: '⚠️', color: '#ef4444' },
+    Security: { icon: '🔍', color: '#3b82f6' },
+  }
+  const badge = badges[principle]
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '2px 6px',
+      background: badge.color + '15',
+      border: `1px solid ${badge.color}`,
+      borderRadius: '2px',
+      fontSize: '0.55rem',
+      color: badge.color,
+      letterSpacing: '0.05em',
+      fontWeight: 600,
+      marginRight: '4px',
+    }}>
+      {badge.icon} {principle}
+    </span>
+  )
+}
+
 // ─── Provenance Query Panel ───────────────────────────────────────────────────
 
-function ProvenanceQuery({ persona, onQuery }) {
+function ProvenanceQuery({ persona, onQuery, theme }) {
   const [days, setDays] = useState(30)
   return persona === 'agriculture' ? null : (
     <div style={{
@@ -615,14 +781,17 @@ function StreamCard({ title, trust, metrics, hist, sparkKeys, sparkRanges, delay
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid #1a2030', flexShrink: 0,
+        marginBottom: '10px', paddingBottom: '8px', borderBottom: `1px solid ${THEMES[localStorage.getItem('theme') || 'dark'].border}`, flexShrink: 0,
+        gap: '8px',
       }}>
         <span style={{ fontSize: '0.68rem', color: '#f59e0b', letterSpacing: '0.18em', fontWeight: 700, minHeight: '1.2em' }}>
           <TypewriterTitle text={title} delayMs={delayMs} />
         </span>
-        <span style={{ fontSize: '0.6rem', color: trustColor, letterSpacing: '0.1em' }}>
-          TRUST {trust.toFixed(1)}%
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '0.6rem', color: trustColor, letterSpacing: '0.1em' }}>
+            🤝 {trust.toFixed(1)}%
+          </span>
+        </div>
       </div>
       <div style={{ flexShrink: 0 }}>{metrics}</div>
       <TrustBar pct={trust} />
@@ -951,8 +1120,9 @@ function SensorRow({ sensor, index, isIntrusion, isLateral, captureTime }) {
 
 // ─── GhostSidebar ─────────────────────────────────────────────────────────────
 
-function GhostSidebar({ gwTriggered, swTriggered, captureTime }) {
+function GhostSidebar({ gwTriggered, swTriggered, captureTime, theme }) {
   const caught = (gwTriggered ? 1 : 0) + (swTriggered ? 1 : 0)
+  const colors = THEMES[theme]
 
   return (
     <aside style={{
@@ -960,23 +1130,22 @@ function GhostSidebar({ gwTriggered, swTriggered, captureTime }) {
       flexShrink: 0,
       display: 'flex',
       flexDirection: 'column',
-      background: '#080b10',
-      borderLeft: '1px solid #1a2030',
+      background: colors.cardBg,
+      borderLeft: `1px solid ${colors.border}`,
       overflow: 'hidden',
+      transition: 'all 0.3s ease',
     }}>
 
       {/* panel header */}
       <div style={{
         padding: '10px 12px 9px',
-        borderBottom: '1px solid #1a2030',
+        borderBottom: `1px solid ${colors.border}`,
         flexShrink: 0,
       }}>
-        <div style={{ fontSize: '0.64rem', color: '#f59e0b', letterSpacing: '0.14em', fontWeight: 700, lineHeight: 1.3 }}>
-          GHOST SENSOR NETWORK
-          <span style={{ color: '#2d3748' }}> // </span>
-          ACTIVE DECOYS
+        <div style={{ fontSize: '0.64rem', color: colors.accent, letterSpacing: '0.14em', fontWeight: 700, lineHeight: 1.3, marginBottom: '6px' }}>
+          🛡️ GHOST NETWORK <TIPPSSBadge principle="Protection" theme={theme} />
         </div>
-        <div style={{ fontSize: '0.52rem', color: '#374151', letterSpacing: '0.07em', marginTop: '4px' }}>
+        <div style={{ fontSize: '0.52rem', color: colors.dimText, letterSpacing: '0.07em', marginTop: '4px' }}>
           Cryptographic honeypots monitoring for intrusion
         </div>
         {/* domain legend */}
@@ -1490,6 +1659,8 @@ function StatusBar({ anomaly, isAttackActive, isMuted, onMuteToggle }) {
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [theme, setTheme] = useState('dark') // 'dark' or 'light'
+  const [showIntro, setShowIntro] = useState(true)
   const [persona, setPersona] = useState('agriculture') // 'agriculture' or 'analyst'
   const [isAttackActive,  setIsAttackActive]  = useState(false)
   const [attackTimestamp, setAttackTimestamp] = useState(null)
@@ -1680,33 +1851,41 @@ export default function App() {
 
   const minTrust = Math.min(water.trustScore, soil.trustScore, health.trustScore)
   const anomaly  = minTrust < 90
+  const colors = THEMES[theme]
+
+  if (showIntro) {
+    return <IntroScreen onStart={() => setShowIntro(false)} theme={theme} />
+  }
 
   return (
     <div style={{
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      background: '#0a0c0f',
+      background: colors.bg,
       fontFamily: "'Share Tech Mono', monospace",
       overflow: 'hidden',
       width: '100%',
       maxWidth: '100vw',
+      color: colors.text,
+      transition: 'background 0.3s ease, color 0.3s ease',
     }}>
 
       {/* ── Header ── */}
       <header style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '9px 12px', background: '#0c1018',
-        borderBottom: '1px solid #1a2030', flexShrink: 0,
+        padding: '9px 12px', background: colors.headerBg,
+        borderBottom: `1px solid ${colors.border}`, flexShrink: 0,
         flexWrap: 'wrap',
         gap: '12px',
         minHeight: 'auto',
+        transition: 'all 0.3s ease',
       }}>
         <div style={{ minWidth: '200px', fontSize: '0.85rem' }}>
-          <span style={{ color: '#f59e0b', fontSize: '0.85rem', letterSpacing: '0.2em', fontWeight: 700 }}>
+          <span style={{ color: colors.accent, fontSize: '0.85rem', letterSpacing: '0.2em', fontWeight: 700 }}>
             TERRASHIELD
           </span>
-          <span style={{ color: '#2d3748', fontSize: '0.7rem', letterSpacing: '0.15em', display: 'block' }}>
+          <span style={{ color: colors.dimText, fontSize: '0.7rem', letterSpacing: '0.15em', display: 'block' }}>
             {persona === 'agriculture' ? 'FARM ADVISORY' : 'MONITOR'}
           </span>
         </div>
@@ -1740,6 +1919,7 @@ export default function App() {
           >
             ↻ RESET
           </button>
+          <ThemeToggle theme={theme} onToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
         </div>
       </header>
 
@@ -1783,10 +1963,11 @@ export default function App() {
                 borderRadius: '2px',
                 width: '100%',
               }}>
-                <div style={{ fontSize: '0.68rem', color: borderColor, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '2px' }}>
+                <div style={{ fontSize: '0.68rem', color: borderColor, letterSpacing: '0.1em', fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {alert.icon} {alert.title}
+                  <TIPPSSBadge principle="Safety" theme={theme} />
                 </div>
-                <div style={{ fontSize: '0.6rem', color: '#9ca3af', lineHeight: 1.6 }}>
+                <div style={{ fontSize: '0.6rem', color: colors.dimText, lineHeight: 1.6 }}>
                   {alert.msg}
                 </div>
               </div>
@@ -1872,9 +2053,14 @@ export default function App() {
                   borderRadius: '2px',
                   transition: 'all 0.3s ease',
                   textTransform: 'uppercase',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
                 }}
+                title="🔍 Security: Forensic provenance tracing"
               >
-                🔍 QUERY PROVENANCE
+                🔍 PROVENANCE
               </button>
             )}
           </div>
@@ -1908,6 +2094,7 @@ export default function App() {
               gwTriggered={gwTriggered}
               swTriggered={swTriggered}
               captureTime={captureTime}
+              theme={theme}
             />
           </div>
         )}
