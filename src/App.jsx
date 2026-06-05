@@ -1,6 +1,48 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { LineChart, Line, ResponsiveContainer } from 'recharts'
 
+// ─── Global mobile styles ──────────────────────────────────────────────────────
+
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style')
+  style.textContent = `
+    * { box-sizing: border-box; }
+    body, html { margin: 0; padding: 0; }
+
+    @media (max-width: 768px) {
+      .stream-cards-container {
+        flex-direction: column !important;
+      }
+      .corr-matrix {
+        display: none !important;
+      }
+      header {
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+      }
+    }
+
+    /* Scrollable areas */
+    .scrollable {
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .scrollable::-webkit-scrollbar {
+      width: 6px;
+    }
+    .scrollable::-webkit-scrollbar-track {
+      background: #0a0c0f;
+    }
+    .scrollable::-webkit-scrollbar-thumb {
+      background: #2d3748;
+      border-radius: 3px;
+    }
+  `
+  document.head.appendChild(style)
+}
+
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
@@ -561,8 +603,13 @@ function StreamCard({ title, trust, metrics, hist, sparkKeys, sparkRanges, delay
     <div style={{
       flex: 1, display: 'flex', flexDirection: 'column',
       background: '#0c1018', border: `1px solid ${borderColor}`, boxShadow: glow,
-      padding: '12px 14px', transition: 'box-shadow 0.7s ease, border-color 0.7s ease',
-      overflow: 'hidden', minWidth: 0,
+      padding: '10px 12px', transition: 'box-shadow 0.7s ease, border-color 0.7s ease',
+      overflow: 'auto', minWidth: '200px',
+      WebkitOverflowScrolling: 'touch',
+      '@media (maxWidth: 768px)': {
+        minWidth: '100%',
+        padding: '8px 10px',
+      },
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1641,23 +1688,30 @@ export default function App() {
       fontFamily: "'Share Tech Mono', monospace",
       overflow: 'hidden',
       paddingBottom: '32px',
+      width: '100vw',
+      '@media (maxWidth: 768px)': {
+        paddingBottom: '60px',
+      },
     }}>
 
       {/* ── Header ── */}
       <header style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '9px 18px', background: '#0c1018',
+        padding: '9px 12px', background: '#0c1018',
         borderBottom: '1px solid #1a2030', flexShrink: 0,
+        flexWrap: 'wrap',
+        gap: '12px',
+        minHeight: 'auto',
       }}>
-        <div>
-          <span style={{ color: '#f59e0b', fontSize: '0.92rem', letterSpacing: '0.22em', fontWeight: 700 }}>
+        <div style={{ minWidth: '200px', fontSize: '0.85rem' }}>
+          <span style={{ color: '#f59e0b', fontSize: '0.85rem', letterSpacing: '0.2em', fontWeight: 700 }}>
             TERRASHIELD
           </span>
-          <span style={{ color: '#2d3748', fontSize: '0.92rem', letterSpacing: '0.22em' }}>
-            {' '}// {persona === 'agriculture' ? 'AGRICULTURAL ADVISORY SYSTEM' : 'TRI-DOMAIN INTEGRITY MONITOR'}
+          <span style={{ color: '#2d3748', fontSize: '0.7rem', letterSpacing: '0.15em', display: 'block' }}>
+            {persona === 'agriculture' ? 'FARM ADVISORY' : 'MONITOR'}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <PersonaSelector persona={persona} onChange={setPersona} />
           <Clock />
           <button
@@ -1691,7 +1745,17 @@ export default function App() {
       </header>
 
       {/* ── Content row: main + ghost sidebar ── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, flexDirection: 'row' }}>
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        overflow: 'hidden',
+        minHeight: 0,
+        flexDirection: 'row',
+        '@media (maxWidth: 768px)': {
+          flexDirection: 'column',
+          overflow: 'visible',
+        },
+      }}>
 
         {/* left: cards + button + correlation */}
         <main style={{
@@ -1699,9 +1763,10 @@ export default function App() {
           display: 'flex',
           flexDirection: 'column',
           gap: '8px',
-          padding: '10px',
-          overflow: 'hidden',
+          padding: '8px',
+          overflow: 'auto',
           minHeight: 0,
+          WebkitOverflowScrolling: 'touch',
         }}>
           {/* Persona-specific alert banner */}
           {(() => {
@@ -1734,7 +1799,15 @@ export default function App() {
           <ProvenanceQuery persona={persona} onQuery={(days) => console.log('Query last', days, 'days')} />
 
           {/* stream cards */}
-          <div className="stream-cards-container" style={{ flex: 5, display: 'flex', gap: '10px', overflow: 'hidden', minHeight: 0 }}>
+          <div className="stream-cards-container" style={{
+            flex: 5,
+            display: 'flex',
+            gap: '8px',
+            overflow: 'hidden',
+            minHeight: 0,
+            flexDirection: 'row',
+            width: '100%',
+          }}>
             <StreamCard
               title="WATER SENSOR ARRAY"
               trust={water.trustScore}
@@ -1830,13 +1903,15 @@ export default function App() {
           )}
         </main>
 
-        {/* right: ghost sensor sidebar — analysts only */}
+        {/* right: ghost sensor sidebar — analysts only (hidden on mobile) */}
         {persona === 'analyst' && (
-          <GhostSidebar
-            gwTriggered={gwTriggered}
-            swTriggered={swTriggered}
-            captureTime={captureTime}
-          />
+          <div style={{ display: 'flex', '@media (maxWidth: 768px)': { display: 'none' } }}>
+            <GhostSidebar
+              gwTriggered={gwTriggered}
+              swTriggered={swTriggered}
+              captureTime={captureTime}
+            />
+          </div>
         )}
 
       </div>
