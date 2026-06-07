@@ -8,6 +8,10 @@
 
 A comprehensive cybersecurity visualization platform for detecting cross-domain sensor attacks in IoT networks. TerraShield provides two specialized interfaces (Agriculture Officer & Cybersecurity Analyst) with real-time cross-domain correlation anomaly detection, HMAC tamper verification, and forensic provenance tracing.
 
+<video src="https://github.com/user-attachments/assets/0de0d0d1-7632-458f-9d7b-859eee8b0333" controls width="800">
+  Your browser does not support the video tag.
+</video>
+
 **IEEE TIPPSS Framework Alignment**: Trust • Identity • Privacy • Protection • Safety • Security
 
 ---
