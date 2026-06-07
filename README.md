@@ -6,7 +6,10 @@
 ![Vite](https://img.shields.io/badge/Vite-5.4+-purple)
 
 A sophisticated cybersecurity visualization platform that monitors correlation anomalies across water, soil, and health domains. TerraShield demonstrates attack propagation through IoT sensor networks and provides real-time forensic analysis via a dynamic provenance trace.
-[screen-capture (14).webm](https://github.com/user-attachments/assets/0de0d0d1-7632-458f-9d7b-859eee8b0333)
+
+<video src="https://github.com/user-attachments/assets/0de0d0d1-7632-458f-9d7b-859eee8b0333" controls width="800">
+  Your browser does not support the video tag.
+</video>
 
 ## Features
 
