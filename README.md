@@ -8,6 +8,12 @@
 
 A comprehensive cybersecurity visualization platform for detecting cross-domain sensor attacks in IoT networks. TerraShield provides two specialized interfaces (Agriculture Officer & Cybersecurity Analyst) with real-time cross-domain correlation anomaly detection, HMAC tamper verification, and forensic provenance tracing.
 
+<p align="center">
+  <a href="https://terra-shield-five.vercel.app/" target="_blank">
+    <img src="https://img.shields.io/badge/🚀%20Go%20Live%20%26%20Explore-TerraShield-success?style=for-the-badge" alt="Go Live & Explore">
+  </a>
+</p>
+
 <video src="https://github.com/user-attachments/assets/0de0d0d1-7632-458f-9d7b-859eee8b0333" controls width="800">
   Your browser does not support the video tag.
 </video>
