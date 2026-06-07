@@ -7,6 +7,9 @@
 
 A sophisticated cybersecurity visualization platform that monitors correlation anomalies across water, soil, and health domains. TerraShield demonstrates attack propagation through IoT sensor networks and provides real-time forensic analysis via a dynamic provenance trace.
 
+[![Watch the video](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://github.com/subramanyanavada123/TerraShield/blob/master/Ui-UX%20Terrashield.webm)
+
+
 ## Features
 
 ### Core Monitoring
